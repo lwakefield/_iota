@@ -1,0 +1,12 @@
+{
+    "presets": ["es2015"],
+    "sourceRoot": "src",
+    "plugins": [
+        ["babel-root-import", {
+            "rootPathSuffix": "src/"
+        }],
+        ["transform-react-jsx", {
+            "pragma": "h"
+        }]
+    ]
+}
