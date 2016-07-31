@@ -1,86 +1,79 @@
-import { jsdom } from 'jsdom';
 import { $toArray } from '~/util';
-import sum from 'hash-sum';
-import { parse } from 'acorn';
-import 'acorn-jsx';
-import { generate } from 'escodegen-wallaby';
+import serialize from '~/serialize';
 
-export function extractParts(html) {
-    const children = $toArray(jsdom(html).body.childNodes);
-    let content = children.filter(v => {
-        return !['STYLE', 'SCRIPT'].includes(v.nodeName);
-    }).filter(v => {
-        if (v.nodeName !== '#text') return true;
-        return v.textContent.trim() !== '';
-    });
-    let styles = children.filter(v => {
-        return v.nodeName === 'STYLE';
-    });
-    let scripts = children.filter(v => {
-        return v.nodeName === 'SCRIPT';
-    });
-    return { content, styles, scripts };
-}
+const toArray = v => [].slice.call(v);
 
-export function makeRootNode (contents) {
-    if (contents.length === 1) return contents[0];
-    let root = document.createElement('div');
-    contents.forEach(v => root.appendChild(v));
-    return root;
-}
+/**
+ * This function recursively parses the DOM into a vdom
+ * The vdom is made up of Objects and Functions
+ * Static elements will be rendered as an Object
+ * Interpolated or Directive based elements are rendered as a Function.
+ * Calling the Function directly will yield errors. This is because the Function
+ *   references properties that are not available in scope.
+ */
+export function parse (el) {
+    if (el.splitText) {
+        let text = el.textContent;
 
-export function hash (el) {
-    el.classList.add(sum(el.innerHTML));
-}
-
-export function closeTags(html) {
-    const selfclosers = [
-        'area',
-        'base',
-        'br',
-        'col',
-        'command',
-        'embed',
-        'hr',
-        'img',
-        'input',
-        'keygen',
-        'link',
-        'meta',
-        'param',
-        'source',
-        'track',
-        'wbr'
-    ].join('|');
-    const re = RegExp(`(<(${selfclosers}).*?)>`, 'g');
-    return html.replace(re, '$1/>');
-};
-
-export function injectRender(js, jsx) {
-    const config = {
-        range: false,
-        loc: false,
-        tokens: false,
-        plugins: {jsx: true}
-    };
-    let toInject = parse(`
-    class A {
-        render () { return (${jsx}) }
-    }`, config);
-    let code = parse(js, Object.assign({sourceType: 'module'}, config));
-
-    let renderFn = toInject.body[0].body.body[0];
-    code.body[0].declaration.body.body.push(renderFn);
-    return generate(code);
-}
-
-export function makeRenderFn (el) {
-    return `
-    render () {
-        return (${el.outerHTML});
+        return needsInterpolation(text)
+            ? interpolate(text)
+            : text;
     }
-    `;
+
+    let tagName = el.tagName.toLowerCase();
+    let attrs = {};
+    toArray(el.attributes).forEach(v => {
+        attrs[v.name] = v.value;
+    });
+    let children = el.childNodes.length
+        ? toArray(el.childNodes).map(v => parse(v))
+        : [];
+
+    let vdom = { tagName, attrs, children }
+
+    Object.keys(directives).forEach(key => {
+        if (!attrs[key]) return;
+
+        let apply = directives[key];
+        let expr = attrs[key];
+        delete vdom.attrs[key];
+        vdom = apply(expr, vdom);
+    });
+    return vdom;
 }
 
-export function buildComponent (contents, script) {
+function needsInterpolation (text) {
+    return text.match(/{{(.*?)}}/g);
 }
+
+function interpolate (text) {
+    const interpolation = text.split(/({{.*?}})/)
+        .filter(v => v.length)
+        .map(v => {
+            if (v.match(/{{(.*?)}}/g)) {
+                return v.replace(/{{\s*(.*?)\s*}}/g, '$1');
+            }
+            return `"${v}"`;
+        })
+        .join(' + ');
+    return new Function(`return ${interpolation};`)
+}
+
+const directives = {
+    'i-for' (expr, vdom) {
+        return new Function(`
+            return ${expr} ? ${ serialize(vdom) } : null;
+        `);
+    },
+    'i-for' (expr, vdom) {
+        let matches = expr.match(/(.+) of (.+)/);
+        let target = matches[2].trim();
+        let localVar = matches[1].trim();
+
+        return new Function(`
+            return ${target}.map(function (${localVar}) {
+                return ${ serialize(vdom) };
+            });
+        `);
+    },
+};
