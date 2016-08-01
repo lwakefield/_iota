@@ -14,22 +14,29 @@ const toArray = v => [].slice.call(v);
 export function parse (el) {
     if (el.splitText) {
         let text = el.textContent;
-
         return needsInterpolation(text)
             ? interpolate(text)
-            : text;
+            : text.trim();
     }
 
     let tagName = el.tagName.toLowerCase();
     let attrs = {};
+    let events = {};
     toArray(el.attributes).forEach(v => {
-        attrs[v.name] = v.value;
+        if (v.name.startsWith('@')) {
+            let name = v.name.replace(/^@/, '');
+            events[name] = new Function('$event', `return ${v.value};`);
+        } else {
+            attrs[v.name] = v.value;
+        }
     });
     let children = el.childNodes.length
         ? toArray(el.childNodes).map(v => parse(v))
         : [];
+    children = children.filter(v => !!v);
 
-    let vdom = { tagName, attrs, children }
+    let vdom = { tagName, attrs, children };
+    if (!emptyObj(events)) vdom.events = events;
 
     Object.keys(directives).forEach(key => {
         if (!attrs[key]) return;
@@ -41,6 +48,9 @@ export function parse (el) {
     });
     return vdom;
 }
+
+const emptyObj = obj => Object.keys(obj).length === 0
+    && obj.constructor === Object;
 
 function needsInterpolation (text) {
     return text.match(/{{(.*?)}}/g);
@@ -60,7 +70,15 @@ function interpolate (text) {
 }
 
 const directives = {
-    'i-for' (expr, vdom) {
+    'i-model' (expr, vdom) {
+        // el updates data on 'change' event
+        // adds a binding to 'value'
+        // <input type="text" i-model="message"> is sugar for:
+        //   <input
+        //      @change="$set('message', $e.target.value)"
+        //      :value="message">
+    },
+    'i-if' (expr, vdom) {
         return new Function(`
             return ${expr} ? ${ serialize(vdom) } : null;
         `);

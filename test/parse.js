@@ -12,7 +12,7 @@ function serializeAndNormalize (obj) {
 
 describe('parse', () => {
 
-    it ('transforms simple', () => {
+    it ('parses simple', () => {
         document.body.innerHTML = `
             <div><input type="text"><p>hello</p></div>
         `;
@@ -25,7 +25,7 @@ describe('parse', () => {
         ));
     });
 
-    it ('transforms with binding', () => {
+    it ('parses with binding', () => {
         document.body.innerHTML = `<p>hello {{ user.name }}</p>`;
         let vdom = parse(document.querySelector('p'));
         expect(serializeAndNormalize(vdom)).to.be.eql(serializeAndNormalize(
@@ -37,7 +37,7 @@ describe('parse', () => {
         ));
     });
 
-    it ('transforms i-for', () => {
+    it ('parses i-for', () => {
         document.body.innerHTML = `
             <div><div i-for="m of messages">message: {{ m.text }}</div></div>
         `;
@@ -59,6 +59,17 @@ describe('parse', () => {
                 }
             ])
         ))
+    });
+
+    it ('parses @click', () => {
+        document.body.innerHTML = `<div @click="console.log($event)"></div>`;
+        let vdom = parse(document.body.querySelector('div'));
+        expect(serializeAndNormalize(vdom.events)).to.be.eql(serializeAndNormalize(
+            {click: function anonymous ($event
+            /**/) {
+                return console.log($event);
+            }}
+        ));
     });
 
 });

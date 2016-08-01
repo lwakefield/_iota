@@ -21,6 +21,8 @@ export function render (vnode) {
 
     let a = vnode.attrs;
     Object.keys(a).forEach( k => node.setAttribute(k, a[k]) );
+    let e = vnode.events || {};
+    Object.keys(e).forEach( k => node.addEventListener(k, e[k]) );
     vnode.children.forEach( v => addChildren(node, render(v)));
 
     return node;
