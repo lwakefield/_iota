@@ -4,9 +4,6 @@
     "plugins": [
         ["babel-root-import", {
             "rootPathSuffix": "src/"
-        }],
-        ["transform-react-jsx", {
-            "pragma": "h"
         }]
     ]
 }

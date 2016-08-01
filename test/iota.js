@@ -41,7 +41,24 @@ describe('Iota', () => {
         expect(el.outerHTML).to.be.eql(
             '<div><input type="text" value="hello world"></div>'
         );
-    })
+    });
+
+    it ('is reactive', () => {
+        document.body.innerHTML = `<p>{{ message }}</p>`;
+
+        let el = document.querySelector('p');
+
+        let iota = new Iota({
+            el,
+            data: {
+                message: 'hello world'
+            }
+        });
+
+        expect(el.outerHTML).to.be.eql('<p>hello world</p>');
+        iota.message = 'reacted';
+        expect(el.outerHTML).to.be.eql('<p>reacted</p>');
+    });
 });
 
 

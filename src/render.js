@@ -20,7 +20,12 @@ export function render (vnode) {
     let node = document.createElement(vnode.tagName);
 
     let a = vnode.attrs;
-    Object.keys(a).forEach( k => node.setAttribute(k, a[k]) );
+    Object.keys(a).forEach( k => {
+        let val;
+        if (a[k] instanceof Function) val = a[k].call();
+        else val = a[k];
+        node.setAttribute(k, val);
+    });
     let e = vnode.events || {};
     Object.keys(e).forEach( k => node.addEventListener(k, e[k]) );
     vnode.children.forEach( v => addChildren(node, render(v)));
@@ -57,8 +62,12 @@ function addChildren (el, children) {
  *   // <p>Fred</p>
  */
 export function preRender (vdom, data={}) {
-    let str = serialize(vdom);
-    let fn = new Function('render', ...Object.keys(data),
-        `return render(${str})`);
-    return fn.bind(null, render);
+    let code = serialize(vdom);
+    let params = Object.keys(data).join(',');
+    let passedParams = Object.keys(data).map(v => `data.${v}`).join(',');
+    return new Function('render', 'data', `
+        return (function (${params}) {
+            return render(${code});
+        })( ${passedParams} );
+    `).bind(null, render, data);
 }
