@@ -34,11 +34,11 @@ export default class Iota {
         $set(this.$data, path, val);
 
         if (!this._watching.includes(path)) {
-            this.$watch(path);
+            this.$proxy(path);
         }
     }
 
-    $watch (path) {
+    $proxy (path) {
         let pathSplit = path.split('.');
         let pathsVisited = [];
         let currObj = this;
