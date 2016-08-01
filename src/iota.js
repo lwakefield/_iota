@@ -12,7 +12,7 @@ export default class Iota {
         this.$update();
     }
     $update () {
-        const rendered = this._render(...Object.values(this.$data));
+        const rendered = this._render();
         this.$el.innerHTML = rendered.innerHTML;
     }
 }

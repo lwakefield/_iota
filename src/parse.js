@@ -26,6 +26,9 @@ export function parse (el) {
         if (v.name.startsWith('@')) {
             let name = v.name.replace(/^@/, '');
             events[name] = new Function('$event', `return ${v.value};`);
+        } else if (v.name.startsWith(':')) {
+            let name = v.name.replace(/^:/, '');
+            attrs[name] = new Function(`return ${v.value};`);
         } else {
             attrs[v.name] = v.value;
         }

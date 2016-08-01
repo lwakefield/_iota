@@ -72,4 +72,15 @@ describe('parse', () => {
         ));
     });
 
+    it ('parses :value', () => {
+        document.body.innerHTML = `<input type="text" :value="message">`;
+        let vdom = parse(document.body.querySelector('input'));
+        expect(serializeAndNormalize(vdom.attrs)).to.be.eql(serializeAndNormalize(
+            {
+                type: 'text',
+                value: function anonymous () { return message; }
+            }
+        ));
+    });
+
 });

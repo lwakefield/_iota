@@ -22,6 +22,26 @@ describe('Iota', () => {
             '<div><p> one </p><p> two </p><p> three </p></div>'
         )
     });
+
+    it('Does attr binding', () => {
+        document.body.innerHTML = `
+        <div>
+            <input type="text" :value="message">
+        </div>`;
+
+        let el = document.querySelector('div');
+
+        let iota = new Iota({
+            el: el,
+            data: {
+                message: 'hello world'
+            }
+        });
+
+        expect(el.outerHTML).to.be.eql(
+            '<div><input type="text" value="hello world"></div>'
+        );
+    })
 });
 
 
