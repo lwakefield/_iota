@@ -1,19 +1,19 @@
 import { parse } from '~/parse';
 import { preRender } from '~/render';
 import { $get, $set, $flatten } from '~/util';
+import proxy from '~/proxy';
+import observe from '~/observe';
 
 export default class Iota {
 
     constructor (options) {
         this.$el = options.el;
         this.$data = {};
-        this._watching = [];
         if (options.data) {
-            let flattenedData = $flatten(options.data);
-            Object.keys(flattenedData).forEach(v => {
-                this.$set(v, flattenedData[v]);
-            })
+            this.$data = options.data;
         }
+        observe(this.$data, this.$update.bind(this));
+        proxy(this, this.$data);
 
         this._vdom = parse(this.$el);
         this._render = preRender(this._vdom, this.$data);
@@ -32,38 +32,6 @@ export default class Iota {
 
     $set (path, val) {
         $set(this.$data, path, val);
-
-        if (!this._watching.includes(path)) {
-            this.$proxy(path);
-        }
-    }
-
-    $proxy (path) {
-        let pathSplit = path.split('.');
-        let pathsVisited = [];
-        let currObj = this;
-        const instance = this;
-        while (pathSplit.length) {
-            let thisKey = pathSplit.shift();
-            pathsVisited.push(thisKey);
-            let thisPath = pathsVisited.join('.');
-
-            if (!currObj.hasOwnProperty(thisKey)) {
-                const target = currObj;
-                Object.defineProperty(target, thisKey, {
-                    enumerable: true,
-                    configurable: true,
-                    get () { return instance.$get(thisPath); },
-                    set (val) {
-                        instance.$set(thisPath, val);
-                        instance.$update();
-                    }
-                });
-                this._watching.push(thisPath);
-            }
-
-            currObj = currObj[thisKey];
-        }
     }
 
 }
