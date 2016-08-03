@@ -1,9 +1,3 @@
 {
-    "presets": ["es2015"],
-    "sourceRoot": "src",
-    "plugins": [
-        ["babel-root-import", {
-            "rootPathSuffix": "src/"
-        }]
-    ]
+    "presets": ["es2015"]
 }

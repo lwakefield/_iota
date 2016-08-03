@@ -1,8 +1,8 @@
-import { parse } from '~/parse';
-import { preRender } from '~/render';
-import { $get, $set, $flatten } from '~/util';
-import proxy from '~/proxy';
-import observe from '~/observe';
+import { parse } from './parse';
+import { preRender } from './render';
+import { $get, $set, $flatten } from './util';
+import proxy from './proxy';
+import observe from './observe';
 
 export default class Iota {
 

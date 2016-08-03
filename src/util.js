@@ -1,4 +1,4 @@
-import '~/polyfills';
+import './polyfills';
 
 export function $has(obj, path) {
     if (!path) return false;

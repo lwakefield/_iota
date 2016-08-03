@@ -1,4 +1,4 @@
-import { $set, $get } from '~/util';
+import { $set, $get } from './util';
 
 const nop = () => {};
 

@@ -1,20 +1,18 @@
 var path = require('path');
 
 module.exports = {
-    entry: './index.js',
+    devtool: 'source-map',
+    entry: './src/index.js',
     output: {
-        path: 'dist',
-        filename: 'index.js'
-    },
-    resolveLoader: {
-        alias: {
-            'iota': path.join(__dirname, './src/loader')
-        }
+        libraryTarget: 'var',
+        library: 'Iota',
+        filename: 'iota.js',
+        path: path.join(__dirname, './dist'),
+        publicPath: '/dist'
     },
     module: {
         loaders: [
-            { test: /\.jsx?$/, loader: 'babel'},
-            { test: /\.iota$/, loader: 'iota' }
+            { test: /\.jsx?$/, loader: 'babel'}
         ]
     }
 };

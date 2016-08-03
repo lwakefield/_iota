@@ -1,4 +1,4 @@
-import serialize from '~/serialize';
+import serialize from './serialize';
 
 /**
  * render recursively turns a vdom into a real dom.
@@ -19,16 +19,17 @@ export function render (vnode) {
     // This is the "normal" case, where we receive an obj
     let node = document.createElement(vnode.tagName);
 
-    let a = vnode.attrs;
+    let a = vnode.attrs ? vnode.attrs : {};
     Object.keys(a).forEach( k => {
         let val;
         if (a[k] instanceof Function) val = a[k].call();
         else val = a[k];
         node.setAttribute(k, val);
     });
-    let e = vnode.events || {};
+    let e = vnode.events ? vnode.events : {};
     Object.keys(e).forEach( k => node.addEventListener(k, e[k]) );
-    vnode.children.forEach( v => addChildren(node, render(v)));
+    let children = vnode.children ? vnode.children : [];
+    children.forEach( v => addChildren(node, render(v)));
 
     return node;
 }

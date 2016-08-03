@@ -1,4 +1,4 @@
-import serialize from '~/serialize';
+import serialize from './serialize';
 
 const toArray = v => [].slice.call(v);
 
@@ -60,6 +60,7 @@ function needsInterpolation (text) {
 
 function interpolate (text) {
     const interpolation = text.split(/({{.*?}})/)
+        .map(v => v.trim())
         .filter(v => v.length)
         .map(v => {
             if (v.match(/{{(.*?)}}/g)) {

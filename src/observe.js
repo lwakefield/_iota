@@ -1,4 +1,4 @@
-import makeReactive from '~/reactive';
+import makeReactive from './reactive';
 
 const nop = () => {};
 
