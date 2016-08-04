@@ -1,6 +1,6 @@
 import { parse } from './parse';
 import { preProcess } from './render';
-import { patch, scheduleFlush } from './diff';
+import { patch, scheduleFlush } from './patch';
 import { $get, $set } from './util';
 import proxy from './proxy';
 import observe from './observe';

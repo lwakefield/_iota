@@ -3,15 +3,7 @@ export function patch (dom, vdom) {
     if (typeof vdom === 'number') return patchText(dom, vdom);
 
     let tasks = [];
-    let { tagName, attrs, events } = vdom;
-
-    if (!dom.tagName || dom.tagName.toLowerCase() !== tagName) {
-        // TODO: Sloppy naming, fix this up
-        let n = newNode(tagName, attrs, events);
-        const olddom = dom;
-        tasks.push(replaceNode.bind(null, olddom, n));
-        dom = n;
-    }
+    [ tasks, dom ] = patchNode(dom, vdom);
 
     tasks = tasks.concat(patchAttrs(dom, vdom), patchChildren(dom, vdom));
 
@@ -24,6 +16,16 @@ export function patch (dom, vdom) {
     // });
 
     return tasks;
+}
+
+function patchNode(dom, vdom) {
+    if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
+        // TODO: Sloppy naming, fix this up
+        let n = newNode(vdom.tagName, vdom.attrs, vdom.events);
+        const olddom = dom;
+        return [[replaceNode.bind(null, olddom, n)], n];
+    }
+    return [[], dom];
 }
 
 function patchAttrs(dom, vnode) {
