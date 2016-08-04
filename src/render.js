@@ -17,8 +17,14 @@ const flatten = v => [].concat.apply([], v);
  */
 export function process (vnode) {
     if (['string', 'number'].includes(typeof vnode)) return vnode;
-    if (vnode instanceof Array) return vnode.map(v => process(v));
     if (vnode instanceof Function) return process(vnode.call());
+    if (vnode instanceof Array) {
+        let result = new Array(vnode.length);
+        for (let i = 0; i < vnode.length; i++) {
+            result[i] = process(vnode[i]);
+        }
+        return result;
+    }
 
     let processed = {
         tagName: vnode.tagName,
