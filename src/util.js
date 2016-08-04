@@ -1,5 +1,3 @@
-import './polyfills';
-
 export function $has(obj, path) {
     if (!path) return false;
 
@@ -31,7 +29,7 @@ export function $set(obj, key, val) {
     let currObj = obj;
     while (path.length) {
         let nextKey = path.shift();
-        let lookAheadKey = path.first();
+        let lookAheadKey = path[0];
         if (path.length === 0) currObj[nextKey] = val;
         if (currObj[nextKey] === undefined) {
             if (parseInt(lookAheadKey) !== NaN) currObj[nextKey] = [];
