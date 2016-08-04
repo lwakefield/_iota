@@ -14,14 +14,7 @@ export function process (vnode) {
         events: {}
     };
 
-    const a = vnode.attrs;
-    Object.keys(a).forEach(k => {
-        let val = a[k];
-        if (val instanceof Function) {
-            val = val.call();
-        }
-        processed.attrs[k] = val;
-    });
+    processed.attrs = getAttrs(vnode.attrs);
 
     if (vnode.children.length) {
         processed.children = flatten(process(vnode.children));
@@ -30,6 +23,18 @@ export function process (vnode) {
     processed.events = vnode.events ? vnode.events : {};
 
     return processed;
+}
+
+function getAttrs(a) {
+    let attrs = {};
+    for (let k in a) {
+        let val = a[k];
+        if (val instanceof Function) {
+            val = val.call();
+        }
+        attrs[k] = val;
+    }
+    return attrs;
 }
 
 export function preProcess (vdom, data={}) {

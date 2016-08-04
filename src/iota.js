@@ -1,6 +1,6 @@
 import { parse } from './parse';
 import { preRender, preProcess } from './render';
-import { patch } from './diff';
+import { patch, scheduleFlush } from './diff';
 import { $get, $set, $flatten } from './util';
 import proxy from './proxy';
 import observe from './observe';
@@ -15,13 +15,14 @@ export default class Iota {
         }
         let requested = false;
         observe(this.$data, () => {
-            if (!requested) {
-                requested = true;
-                requestAnimationFrame(() => {
-                    this.$update();
-                    requested = false;
-                });
-            }
+            if (requested) return;
+
+            requested = true;
+            setTimeout(() => {
+                let vdom = this._process();
+                let tasks = patch(this.$el, vdom);
+                scheduleFlush(tasks, () => requested = false);
+            }, 0);
         });
         proxy(this, this.$data);
 
@@ -29,16 +30,9 @@ export default class Iota {
         this._render = preRender(this._vdom, this.$data);
         this._process = preProcess(this._vdom, this.$data);
 
-        this.$update();
-    }
-
-    $update () {
-        setTimeout(() => {
-            console.log(this._process());
-            patch(this.$el, this._process());
-            // const rendered = this._render();
-            // this.$el.innerHTML = rendered.innerHTML;
-        }, 0);
+        let vdom = this._process();
+        let tasks = patch(this.$el, vdom);
+        scheduleFlush(tasks, () => requested = false);
     }
 
     $get (path) {
