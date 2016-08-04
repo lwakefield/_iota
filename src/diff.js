@@ -37,7 +37,7 @@ export function patch (dom, vdom) {
     if (!dom.tagName || dom.tagName.toLowerCase() !== tagName) {
         let n = newNode(tagName, attrs, events);
         const olddom = dom;
-        tasks.push(() => replaceNode(olddom, n));
+        tasks.push(replaceNode.bind(null, olddom, n));
         dom = n;
     }
 
@@ -109,17 +109,22 @@ function patchChildren(dom, vnode) {
             continue;
         }
         if (currNode) {
-            tasks.push(() => currNode.remove());
+            tasks.push(removeNode.bind(null, currNode));
             continue;
         }
     }
     return tasks;
 }
 
+function removeNode (node) {
+    node.remove();
+    node = null;
+}
+
 function patchText(dom, vdom) {
     // Dom is not a TextNode, replace it
     if (!dom.splitText) {
-        return [() => replaceNode(dom, newTextNode(vdom))];
+        return [replaceNode.bind(null, dom, newTextNode(vdom))];
     }
     // Dom content does not match
     if (dom.textContent !== vdom) {
@@ -137,13 +142,14 @@ function newNode (name, attrs, events) {
     Object.keys(attrs).forEach(k => {
         node.setAttribute(k, attrs[k]);
     });
-    Object.keys(events).forEach(k => {
-        node.addEventListener(k, events[k])
-    });
+    // Object.keys(events).forEach(k => {
+    //     node.addEventListener(k, events[k])
+    // });
     return node;
 }
 
 function replaceNode(oldNode, newNode) {
     if (!oldNode.parentNode) return;
     oldNode.parentNode.replaceChild(newNode, oldNode);
+    oldNode = null;
 }
