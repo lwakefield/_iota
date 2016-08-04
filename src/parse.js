@@ -29,7 +29,9 @@ export function parse (el) {
             let name = v.name.replace(/^:/, '');
             attrs[name] = new Function(`return ${v.value};`);
         } else {
-            attrs[v.name] = v.value;
+            attrs[v.name] = needsInterpolation(v.value)
+                ? interpolate(v.value)
+                : v.value;
         }
     });
     let children = el.childNodes.length
