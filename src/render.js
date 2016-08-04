@@ -2,6 +2,19 @@ import serialize from './serialize';
 
 const flatten = v => [].concat.apply([], v);
 
+/**
+ * process recursively processes a dynamic vdom into a static vdom.
+ * A vdom is considered dynamic if it contains refs to functions, which will be
+ *   called.
+ * The vnode root may be an Array, Function, String or Object
+ * When the vnode is an Array, it will return an Array of vdom
+ *   elements.
+ * When the vnode is a Function it will return a vdom element.
+ * When the vnode is a string or number, it will return itself.
+ * When the vnode is an Object, this is the "normal" case.  The vnode contains a
+ *   tagName, an object of attributes mapped string->string an Array of child
+ *   elements.
+ */
 export function process (vnode) {
     if (['string', 'number'].includes(typeof vnode)) return vnode;
     if (vnode instanceof Array) return vnode.map(v => process(v));
@@ -37,62 +50,9 @@ function getAttrs(a) {
     return attrs;
 }
 
-export function preProcess (vdom, data={}) {
-    let code = serialize(vdom);
-    let params = Object.keys(data).join(',');
-    let passedParams = Object.keys(data).map(v => `data.${v}`).join(',');
-    return new Function('process', 'data', `
-        return (function (${params}) {
-            return process(${code});
-        })( ${passedParams} );
-    `).bind(null, process, data);
-}
-
 /**
- * render recursively turns a vdom into a real dom.
- * The vnode root can be either an Array, Function, String or Object
- * When the vnode is an Array, it is expected to be an Array of vdom elements.
- * When the vnode is a Function it is expected to return a vdom element. 
- * When the vnode is a string, it will be added to the vdom as a TextNode
- * When the vnode is an Object, this is the "normal" case.  The vnode contains a
- *   tagName, an object of attributes mapped string->string an Array of child
- *   elements.
- */
-export function render (vnode) {
-    if (vnode.split) return document.createTextNode(vnode);
-
-    if (vnode instanceof Array) return vnode.map(v => render(v));
-    if (vnode instanceof Function) return render(vnode.call());
-
-    // This is the "normal" case, where we receive an obj
-    let node = document.createElement(vnode.tagName);
-
-    let a = vnode.attrs ? vnode.attrs : {};
-    Object.keys(a).forEach( k => {
-        let val;
-        if (a[k] instanceof Function) val = a[k].call();
-        else val = a[k];
-        node.setAttribute(k, val);
-    });
-    let e = vnode.events ? vnode.events : {};
-    Object.keys(e).forEach( k => node.addEventListener(k, e[k]) );
-    let children = vnode.children ? vnode.children : [];
-    children.forEach( v => addChildren(node, render(v)));
-
-    return node;
-}
-
-function addChildren (el, children) {
-    if (children instanceof Array) {
-        children.forEach(v => el.appendChild(v));
-        return;
-    }
-    el.appendChild(children);
-}
-
-/**
- * This is the magic preRender Function.
- * The preRender function returns a render Function.
+ * This is the magic preProcess Function.
+ * The preProcess function returns a process Function.
  * Functions in the vdom will often contain variables that are not in scope,
  *   this is how we resolve the scope.
  *
@@ -105,18 +65,19 @@ function addChildren (el, children) {
  *     }
  *   };
  *   // This returns our magic function that resolves the scope
- *   let render = preRender(vdom, data);
+ *   let render = preProcess(vdom, data);
  *   // The ugliest bit, is that we need to call it like this:
- *   let dom = render(...Object.values(data));
+ *   let dom = process();
  *   // <p>Fred</p>
  */
-export function preRender (vdom, data={}) {
+export function preProcess (vdom, data={}) {
     let code = serialize(vdom);
     let params = Object.keys(data).join(',');
     let passedParams = Object.keys(data).map(v => `data.${v}`).join(',');
-    return new Function('render', 'data', `
+    return new Function('process', 'data', `
         return (function (${params}) {
-            return render(${code});
+            return process(${code});
         })( ${passedParams} );
-    `).bind(null, render, data);
+    `).bind(null, process, data);
 }
+

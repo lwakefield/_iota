@@ -1,10 +1,6 @@
 // Where b is newer
 const nop = () => {};
 
-function enqueue(fn) {
-    queue.push(fn);
-}
-
 export function scheduleFlush (tasks, done=nop) {
     requestAnimationFrame(flush.bind(null, tasks, done));
 }
