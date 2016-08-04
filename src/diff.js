@@ -1,26 +1,3 @@
-// Where b is newer
-const nop = () => {};
-
-export function scheduleFlush (tasks, done=nop) {
-    requestAnimationFrame(flush.bind(null, tasks, done));
-}
-
-const TIME_LIMIT = 5;
-function flush (tasks, done) {
-    let start = Date.now();
-    while (tasks.length) {
-        // Run the next task
-        (tasks.shift())();
-
-        // We have run out of time, schedule another flush
-        if ((Date.now() - start) > TIME_LIMIT) {
-            console.log('buffer');
-            return requestAnimationFrame(flush.bind(null, tasks, done));
-        }
-    }
-    done();
-}
-
 export function patch (dom, vdom) {
     let tasks = [];
     if (['string', 'number'].includes(typeof vdom)) {
@@ -148,4 +125,29 @@ function replaceNode(oldNode, newNode) {
     if (!oldNode.parentNode) return;
     oldNode.parentNode.replaceChild(newNode, oldNode);
     oldNode = null;
+}
+
+/**
+ * scheduleFlush will call all tasks, and then done when finished
+ * tasks will be called in batches, where a batch takes less than 5ms
+ * If a batch takes longer than 5ms, then it will be rescheduled for next frame
+ */
+export function scheduleFlush (tasks, done=() => {}) {
+    requestAnimationFrame(flush.bind(null, tasks, done));
+}
+
+const TIME_LIMIT = 5;
+function flush (tasks, done) {
+    let start = Date.now();
+    while (tasks.length) {
+        // Run the next task
+        (tasks.shift())();
+
+        // We have run out of time, schedule another flush
+        if ((Date.now() - start) > TIME_LIMIT) {
+            console.log('buffer');
+            return requestAnimationFrame(flush.bind(null, tasks, done));
+        }
+    }
+    done();
 }

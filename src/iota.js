@@ -1,7 +1,7 @@
 import { parse } from './parse';
-import { preRender, preProcess } from './render';
+import { preProcess } from './render';
 import { patch, scheduleFlush } from './diff';
-import { $get, $set, $flatten } from './util';
+import { $get, $set } from './util';
 import proxy from './proxy';
 import observe from './observe';
 
@@ -13,26 +13,26 @@ export default class Iota {
         if (options.data) {
             this.$data = options.data;
         }
-        let requested = false;
-        observe(this.$data, () => {
-            if (requested) return;
-
-            requested = true;
-            setTimeout(() => {
-                let vdom = this._process();
-                let tasks = patch(this.$el, vdom);
-                scheduleFlush(tasks, () => requested = false);
-            }, 0);
-        });
+        this._updating = false;
+        observe(this.$data, this.$update.bind(this));
         proxy(this, this.$data);
 
         this._vdom = parse(this.$el);
-        this._render = preRender(this._vdom, this.$data);
         this._process = preProcess(this._vdom, this.$data);
 
+        this.$forceUpdate();
+    }
+
+    $update () {
+        if (this._updating) return;
+        setTimeout(this.$forceUpdate.bind(this), 0);
+    }
+
+    $forceUpdate () {
+        this._updating = true;
         let vdom = this._process();
         let tasks = patch(this.$el, vdom);
-        scheduleFlush(tasks, () => requested = false);
+        scheduleFlush(tasks, () => this._updating = false);
     }
 
     $get (path) {
