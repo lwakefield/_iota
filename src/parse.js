@@ -62,8 +62,7 @@ function needsInterpolation (text) {
 
 function interpolate (text) {
     const interpolation = text.split(/({{.*?}})/)
-        .map(v => v.trim())
-        .filter(v => v.length)
+        .filter(v => v.trim().length)
         .map(v => {
             if (v.match(/{{(.*?)}}/g)) {
                 return v.replace(/{{\s*(.*?)\s*}}/g, '$1');

@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import Iota from '~/iota';
+import Iota from '../src/iota';
 
 describe('Iota', () => {
-    it('Works', () => {
+    it('Works', done => {
         document.body.innerHTML = `
         <div>
             <p i-for="m of messages"> {{ m }} </p>
@@ -18,12 +18,15 @@ describe('Iota', () => {
             }
         });
 
-        expect(el.outerHTML).to.be.eql(
-            '<div><p> one </p><p> two </p><p> three </p></div>'
-        )
+        iota.$nextTick(() => {
+            expect(el.outerHTML).to.be.eql(
+                '<div><p>one</p><p>two</p><p>three</p></div>'
+            )
+            done();
+        })
     });
 
-    it('Does attr binding', () => {
+    it('Does attr binding', done => {
         document.body.innerHTML = `
         <div>
             <input type="text" :value="message">
@@ -38,12 +41,15 @@ describe('Iota', () => {
             }
         });
 
-        expect(el.outerHTML).to.be.eql(
-            '<div><input type="text" value="hello world"></div>'
-        );
+        iota.$nextTick(() => {
+            expect(el.outerHTML).to.be.eql(
+                '<div><input type="text" value="hello world"></div>'
+            )
+            done();
+        });
     });
 
-    it ('is reactive', () => {
+    it('is reactive', done => {
         document.body.innerHTML = `<p>{{ message }}</p>`;
 
         let el = document.querySelector('p');
@@ -55,9 +61,14 @@ describe('Iota', () => {
             }
         });
 
-        expect(el.outerHTML).to.be.eql('<p>hello world</p>');
-        iota.message = 'reacted';
-        expect(el.outerHTML).to.be.eql('<p>reacted</p>');
+        iota.$nextTick(() => {
+            expect(el.outerHTML).to.be.eql('<p>hello world</p>')
+            iota.message = 'reacted';
+            iota.$nextTick(() => {
+                expect(el.outerHTML).to.be.eql('<p>reacted</p>')
+                done();
+            });
+        });
     });
 });
 

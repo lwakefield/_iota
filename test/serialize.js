@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import serialize from '~/serialize';
+import serialize from '../src/serialize';
 
 describe('serialize', () => {
     it ('works on a basic obj', () => {

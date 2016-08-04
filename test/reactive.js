@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import makeReactive from '~/reactive';
+import makeReactive from '../src/reactive';
 
 describe('Reactive', () => {
     it('Adds getters and setters', () => {

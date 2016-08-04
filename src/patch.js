@@ -5,7 +5,10 @@ export function patch (dom, vdom) {
     let tasks = [];
     [ tasks, dom ] = patchNode(dom, vdom);
 
-    tasks = tasks.concat(patchAttrs(dom, vdom), patchChildren(dom, vdom));
+    return tasks.concat(
+        patchAttrs(dom, vdom),
+        patchChildren(dom, vdom)
+    );
 
     // Reattach all events listeners to ensure they are correct
     // if (dom.events) {
@@ -14,8 +17,6 @@ export function patch (dom, vdom) {
     // Object.keys(events).forEach(k => {
     //     dom.addEventListener(k, events[k])
     // });
-
-    return tasks;
 }
 
 function patchNode(dom, vdom) {
@@ -132,6 +133,8 @@ function replaceNode(oldNode, newNode) {
  * tasks will be called in batches, where a batch takes less than 5ms
  * If a batch takes longer than 5ms, then it will be rescheduled for next frame
  */
+const requestAnimationFrame = window.requestAnimationFrame
+    || (cb => setTimeout(cb, 16));
 export function scheduleFlush (tasks, done=() => {}) {
     requestAnimationFrame(flush.bind(null, tasks, done));
 }
@@ -145,8 +148,7 @@ function flush (tasks, done) {
 
         // We have run out of time, schedule another flush
         if ((Date.now() - start) > TIME_LIMIT) {
-            console.log('buffer');
-            return requestAnimationFrame(flush.bind(null, tasks, done));
+            return scheduleFlush(tasks, done);
         }
     }
     done();

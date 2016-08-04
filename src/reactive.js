@@ -1,8 +1,6 @@
 import { $set, $get } from './util';
 
-const nop = () => {};
-
-export default function makeReactive (obj, key, fn=nop) {
+export default function makeReactive (obj, key, fn=() => {}) {
     const prop = Object.getOwnPropertyDescriptor(obj, key);
     let val = obj[key];
     let setter = prop.set

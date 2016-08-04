@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import proxy from '~/proxy';
+import proxy from '../src/proxy';
 
 describe('Proxy', () => {
     it('Works', () => {

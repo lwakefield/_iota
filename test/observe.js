@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import observe from '~/observe';
+import observe from '../src/observe';
 
 describe('Observe', () => {
     it('Walks the obj', () => {

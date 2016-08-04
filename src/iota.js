@@ -19,6 +19,7 @@ export default class Iota {
 
         this._vdom = parse(this.$el);
         this._process = preProcess(this._vdom, this.$data);
+        this._nextTickCallBacks = [];
 
         this.$forceUpdate();
     }
@@ -32,7 +33,22 @@ export default class Iota {
         this._updating = true;
         let vdom = this._process();
         let tasks = patch(this.$el, vdom);
-        scheduleFlush(tasks, () => this._updating = false);
+        scheduleFlush(tasks, () => {
+            this._updating = false;
+            this._nextTickHandler();
+        });
+    }
+
+    $nextTick (fn) {
+        this._nextTickCallBacks.push(fn);
+    }
+
+    _nextTickHandler () {
+        let length = this._nextTickCallBacks.length;
+        for (let i = 0; i < length; i++) {
+            this._nextTickCallBacks[i]();
+        }
+        this._nextTickCallBacks.splice(0, length);
     }
 
     $get (path) {
