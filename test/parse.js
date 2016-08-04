@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import serialize from '~/serialize';
-import h from '~/h';
-import { parse } from '~/parse';
+import serialize from '../src/serialize';
+import h from '../src/h';
+import { parse } from '../src/parse';
 
 function serializeAndNormalize (obj) {
     return serialize(obj)
@@ -23,6 +23,30 @@ describe('parse', () => {
                 h('p', {}, ['hello'])
             ])
         ));
+    });
+
+    it('parses multiple children', () => {
+        document.body.innerHTML = `
+            <ul>
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+            </ul>
+        `;
+        let vdom = parse(document.body);
+        expect(vdom).to.eql(
+            {
+                "tagName": "body", "attrs": {}, "children": [
+                    {
+                        "tagName": "ul", "attrs": {}, "children": [
+                            { "tagName": "li", "attrs": {}, "children": [ "1" ] },
+                            { "tagName": "li", "attrs": {}, "children": [ "2" ] },
+                            { "tagName": "li", "attrs": {}, "children": [ "3" ] }
+                        ]
+                    }
+                ]
+            }
+        );
     });
 
     it ('parses with binding', () => {

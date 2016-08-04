@@ -1,5 +1,48 @@
 import serialize from './serialize';
 
+const flatten = v => [].concat.apply([], v);
+
+export function process (vnode) {
+    if (['string', 'number'].includes(typeof vnode)) return vnode;
+    if (vnode instanceof Array) return vnode.map(v => process(v));
+    if (vnode instanceof Function) return process(vnode.call());
+
+    let processed = {
+        tagName: vnode.tagName,
+        attrs: {},
+        children: [],
+        events: {}
+    };
+
+    const a = vnode.attrs;
+    Object.keys(a).forEach(k => {
+        let val = a[k];
+        if (val instanceof Function) {
+            val = val.call();
+        }
+        processed.attrs[k] = val;
+    });
+
+    if (vnode.children.length) {
+        processed.children = flatten(process(vnode.children));
+    }
+
+    processed.events = vnode.events ? vnode.events : {};
+
+    return processed;
+}
+
+export function preProcess (vdom, data={}) {
+    let code = serialize(vdom);
+    let params = Object.keys(data).join(',');
+    let passedParams = Object.keys(data).map(v => `data.${v}`).join(',');
+    return new Function('process', 'data', `
+        return (function (${params}) {
+            return process(${code});
+        })( ${passedParams} );
+    `).bind(null, process, data);
+}
+
 /**
  * render recursively turns a vdom into a real dom.
  * The vnode root can be either an Array, Function, String or Object
