@@ -1,5 +1,3 @@
-import { $set, $get } from './util';
-
 export default function makeReactive (obj, key, fn=() => {}) {
     const prop = Object.getOwnPropertyDescriptor(obj, key);
     let val = obj[key];

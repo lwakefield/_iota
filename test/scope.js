@@ -45,5 +45,13 @@ describe('exposeScope', () => {
         );
         expect(fn()).to.be.eql(1);
     });
+    it ('works with empty scope', () => {
+        let data = {foo: 1};
+        let fn = exposeScope(
+            function () { return foo; },
+            null, data, {}, {}
+        );
+        expect(fn()).to.eql(1)
+    });
 });
 

@@ -55,35 +55,3 @@ function getAttrs(a) {
     }
     return attrs;
 }
-
-/**
- * This is the magic preProcess Function.
- * The preProcess function returns a process Function.
- * Functions in the vdom will often contain variables that are not in scope,
- *   this is how we resolve the scope.
- *
- * ex.
- *   // user.name does not exist in the global scope.
- *   let vdom = h('p', {}, [() => user.name]);
- *   let data = {
- *     user: {
- *       name: 'Fred'
- *     }
- *   };
- *   // This returns our magic function that resolves the scope
- *   let render = preProcess(vdom, data);
- *   // The ugliest bit, is that we need to call it like this:
- *   let dom = process();
- *   // <p>Fred</p>
- */
-export function preProcess (vdom, data={}) {
-    let code = serialize(vdom);
-    let params = Object.keys(data).join(',');
-    let passedParams = Object.keys(data).map(v => `data.${v}`).join(',');
-    return new Function('process', 'data', `
-        return (function (${params}) {
-            return process(${code});
-        })( ${passedParams} );
-    `).bind(null, process, data);
-}
-

@@ -1,9 +1,11 @@
 import { parse } from './parse';
-import { preProcess } from './render';
+import { process } from './render';
 import { patch, scheduleFlush } from './patch';
 import { $get, $set } from './util';
 import proxy from './proxy';
 import observe from './observe';
+import exposeScope from './scope';
+import serialize from './serialize';
 
 export default class Iota {
 
@@ -17,8 +19,18 @@ export default class Iota {
         observe(this.$data, this.$update.bind(this));
         proxy(this, this.$data);
 
+        this.$methods = {};
+        if (options.methods) {
+            this.$methods = options.methods;
+            proxy(this, this.$methods);
+        }
+
         this._vdom = parse(this.$el);
-        this._process = preProcess(this._vdom, this.$data);
+        this._process = exposeScope(
+            `return __process(${serialize(this._vdom)})`,
+            this,
+            this.$data, this.$methods, { __process: process }
+        );
         this._nextTickCallBacks = [];
 
         this.$forceUpdate();
