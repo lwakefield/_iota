@@ -1,11 +1,12 @@
-import { parse } from './parse';
-import { process } from './render';
-import { patch, scheduleFlush } from './patch';
 import { $get, $set } from './util';
 import proxy from './proxy';
 import observe from './observe';
 import exposeScope from './scope';
 import serialize from './serialize';
+
+import { parse } from './vdom/parse';
+import expand from './vdom/expand';
+import { patch, scheduleFlush } from './vdom/patch';
 
 export default class Iota {
 
@@ -26,10 +27,10 @@ export default class Iota {
         }
 
         this._vdom = parse(this.$el);
-        this._process = exposeScope(
-            `return __process(${serialize(this._vdom)})`,
+        this._expandVdom = exposeScope(
+            `return __expand(${serialize(this._vdom)})`,
             this,
-            this.$data, this.$methods, { __process: process }
+            this.$data, this.$methods, { __expand: expand }
         );
         this._nextTickCallBacks = [];
 
@@ -43,7 +44,7 @@ export default class Iota {
 
     $forceUpdate () {
         this._updating = true;
-        let vdom = this._process();
+        let vdom = this._expandVdom();
         let tasks = patch(this.$el, vdom);
         scheduleFlush(tasks, () => {
             this._updating = false;
