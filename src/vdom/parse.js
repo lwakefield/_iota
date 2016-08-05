@@ -10,7 +10,7 @@ const toArray = v => [].slice.call(v);
  * Calling the Function directly will yield errors. This is because the Function
  *   references properties that are not available in scope.
  */
-export function parse (el) {
+export default function parse (el) {
     if (el.splitText) {
         let text = el.textContent;
         return needsInterpolation(text)

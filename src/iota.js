@@ -4,7 +4,7 @@ import observe from './observe';
 import exposeScope from './scope';
 import serialize from './serialize';
 
-import { parse } from './vdom/parse';
+import parse from './vdom/parse';
 import expand from './vdom/expand';
 import { patch, scheduleFlush } from './vdom/patch';
 

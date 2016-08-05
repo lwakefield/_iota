@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import serialize from '../src/serialize';
 import h from '../src/h';
-import { parse } from '../src/parse';
+import parse from '../src/vdom/parse';
 
 function serializeAndNormalize (obj) {
     return serialize(obj)

@@ -1,20 +1,18 @@
 import { expect } from 'chai';
 import serialize from '../src/serialize';
-import { parse } from '../src/parse';
-import { preRender, render, preProcess } from '../src/render';
+import parse from '../src/vdom/parse';
+import expand from '../src/vdom/expand';
 import h from '../src/h';
 
 import { jsdom } from 'jsdom';
 
 describe('process', () => {
     it ('flattens arrays', () => {
-        let data = {
-            messages: [
-                {text: 'one'},
-                {text: 'two'},
-                {text: 'three'}
-            ]
-        };
+        let messages = [
+            {text: 'one'},
+            {text: 'two'},
+            {text: 'three'}
+        ]
         let vdom = h('div', {}, [
             () => messages.map(m => {
                 return {
@@ -24,8 +22,7 @@ describe('process', () => {
                 };
             })
         ]);
-        let process = preProcess(vdom, data);
-        expect(process()).to.eql(
+        expect(expand(vdom)).to.eql(
             {
                 "tagName": "div", "attrs": {}, "children": [
                     { "tagName": "p", "attrs": {}, "children": [ "one" ], "events": {} },
@@ -37,17 +34,15 @@ describe('process', () => {
         )
     });
     it ('processes complex', () => {
-        let data = {
-            user: {
-                firstName: 'Fred',
-                lastName: 'Doe'
-            },
-            messages: [
-                {text: 'one'},
-                {text: 'two'},
-                {text: 'three'}
-            ]
+        let user = {
+            firstName: 'Fred',
+            lastName: 'Doe'
         };
+        let messages = [
+            {text: 'one'},
+            {text: 'two'},
+            {text: 'three'}
+        ]
         let vdom = h('div', {}, [
             h('h1', {}, ['Hello World!']),
             h('p', {}, [
@@ -64,8 +59,7 @@ describe('process', () => {
                 };
             })
         ]);
-        let process = preProcess(vdom, data);
-        expect(process()).to.eql({
+        expect(expand(vdom)).to.eql({
             "tagName": "div", "attrs": {}, "children": [
                 { "tagName": "h1", "attrs": {}, "children": [ "Hello World!" ], "events": {} },
                 { "tagName": "p", "attrs": {}, "children": [ "Fred", " - ", "Doe" ], "events": {} },
