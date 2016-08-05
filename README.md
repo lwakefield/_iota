@@ -32,3 +32,5 @@ A lot to do still.
 - [ ] Implement event system
 - [ ] Lifecycle and ability to destroy the iota instance
 - [ ] Computed getters
+- [ ] Prove security of `exposeScopce`
+- [ ] Better ability to mutate exposed scope
