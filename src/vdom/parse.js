@@ -1,6 +1,13 @@
 import serialize from '../serialize';
 
 const toArray = v => [].slice.call(v);
+const isEventAttr = v => v.name.startsWith('@');
+const isBindingAttr = v => v.name.startsWith(':');
+const elHasDir = (el, dir) => {
+    return toArray(el.attributes).findIndex(v => v.name.match(dir)) !== -1;
+}
+const getDir = (el, dir) => toArray(el.attributes)
+    .find(v => v.name.match(dir));
 
 /**
  * This function recursively parses the DOM into a vdom
@@ -21,33 +28,35 @@ export default function parse (el) {
     let tagName = el.tagName.toLowerCase();
     let attrs = {};
     let events = {};
+    let vdom = {
+        tagName: el.tagName.toLowerCase(),
+        attrs: {},
+        events: [],
+        children: []
+    }
     toArray(el.attributes).forEach(v => {
-        if (v.name.startsWith('@')) {
-            let name = v.name.replace(/^@/, '');
-            events[name] = new Function('$event', `return ${v.value};`);
-        } else if (v.name.startsWith(':')) {
-            let name = v.name.replace(/^:/, '');
-            attrs[name] = new Function(`return ${v.value};`);
+        if (isEventAttr(v)) {
+            parseEventAttr(vdom, v);
+        } else if (isBindingAttr(v)) {
+            parseBindingAttr(vdom, v);
         } else {
-            attrs[v.name] = needsInterpolation(v.value)
-                ? interpolate(v.value)
-                : v.value;
+            parseAttr(vdom, v);
         }
     });
     let children = el.childNodes.length
         ? toArray(el.childNodes).map(v => parse(v))
         : [];
-    children = children.filter(v => !!v);
-
-    let vdom = { tagName, attrs, children };
-    if (!emptyObj(events)) vdom.events = events;
+    vdom.children = children.filter(v => !!v);
 
     Object.keys(directives).forEach(key => {
-        if (!attrs[key]) return;
+        // console.log(getDir(el, key));
+        // let attr = getDir(el, key);
+        // console.log(attr);
+        const expr = vdom.attrs[key];
+        if (!expr) return;
+        delete vdom.attrs[key];
 
         let apply = directives[key];
-        let expr = attrs[key];
-        delete vdom.attrs[key];
         vdom = apply(expr, vdom);
     });
     return vdom;
@@ -55,6 +64,23 @@ export default function parse (el) {
 
 const emptyObj = obj => Object.keys(obj).length === 0
     && obj.constructor === Object;
+
+function parseEventAttr (vdom, attr) {
+    let type = attr.name.replace(/^@/, '');
+    let listener = new Function('$event', `return ${attr.value};`);
+    vdom.events.push({ type, listener });
+}
+
+function parseBindingAttr (vdom, attr) {
+    let name = attr.name.replace(/^:/, '');
+    vdom.attrs[name] = new Function(`return ${attr.value};`);
+}
+
+function parseAttr(vdom, attr) {
+    vdom.attrs[attr.name] = needsInterpolation(attr.value)
+        ? interpolate(attr.value)
+        : attr.value;
+}
 
 function needsInterpolation (text) {
     return text.match(/{{(.*?)}}/g);
