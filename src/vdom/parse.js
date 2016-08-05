@@ -1,11 +1,6 @@
 import serialize from '../serialize';
 
 const toArray = v => [].slice.call(v);
-const isEventAttr = v => v.name.startsWith('@');
-const isBindingAttr = v => v.name.startsWith(':');
-const elHasDir = (el, dir) => {
-    return toArray(el.attributes).findIndex(v => v.name.match(dir)) !== -1;
-}
 const getDir = (el, dir) => toArray(el.attributes)
     .find(v => v.name.match(dir));
 
@@ -25,55 +20,31 @@ export default function parse (el) {
             : text.trim();
     }
 
-    let tagName = el.tagName.toLowerCase();
-    let attrs = {};
-    let events = {};
     let vdom = {
         tagName: el.tagName.toLowerCase(),
         attrs: {},
         events: [],
         children: []
     }
-    toArray(el.attributes).forEach(v => {
-        if (isEventAttr(v)) {
-            parseEventAttr(vdom, v);
-        } else if (isBindingAttr(v)) {
-            parseBindingAttr(vdom, v);
-        } else {
-            parseAttr(vdom, v);
-        }
-    });
-    let children = el.childNodes.length
+    vdom.children = (
+        el.childNodes.length
         ? toArray(el.childNodes).map(v => parse(v))
-        : [];
-    vdom.children = children.filter(v => !!v);
+        : []
+    ).filter(v => !!v);
 
+    toArray(el.attributes).forEach(v => {
+        parseAttr(vdom, v);
+    });
     Object.keys(directives).forEach(key => {
-        // console.log(getDir(el, key));
-        // let attr = getDir(el, key);
-        // console.log(attr);
-        const expr = vdom.attrs[key];
-        if (!expr) return;
-        delete vdom.attrs[key];
+        let attr = getDir(el, key);
+        if (!attr) return;
+        el.removeAttribute(attr.name)
+        delete vdom.attrs[attr.name];
 
         let apply = directives[key];
-        vdom = apply(expr, vdom);
+        vdom = apply(attr, vdom);
     });
     return vdom;
-}
-
-const emptyObj = obj => Object.keys(obj).length === 0
-    && obj.constructor === Object;
-
-function parseEventAttr (vdom, attr) {
-    let type = attr.name.replace(/^@/, '');
-    let listener = new Function('$event', `return ${attr.value};`);
-    vdom.events.push({ type, listener });
-}
-
-function parseBindingAttr (vdom, attr) {
-    let name = attr.name.replace(/^:/, '');
-    vdom.attrs[name] = new Function(`return ${attr.value};`);
 }
 
 function parseAttr(vdom, attr) {
@@ -100,6 +71,17 @@ function interpolate (text) {
 }
 
 const directives = {
+    '^@.+' (attr, vdom) {
+        let type = attr.name.replace(/^@/, '');
+        let listener = new Function('$event', `return ${attr.value};`);
+        vdom.events.push({ type, listener });
+        return vdom;
+    },
+    '^:.+' (attr, vdom) {
+        let name = attr.name.replace(/^:/, '');
+        vdom.attrs[name] = new Function(`return ${attr.value};`);
+        return vdom;
+    },
     'i-model' (expr, vdom) {
         // el updates data on 'change' event
         // adds a binding to 'value'
@@ -108,13 +90,13 @@ const directives = {
         //      @change="$set('message', $e.target.value)"
         //      :value="message">
     },
-    'i-if' (expr, vdom) {
+    '^i-if' (attr, vdom) {
         return new Function(`
-            return ${expr} ? ${ serialize(vdom) } : null;
+            return ${attr.value} ? ${ serialize(vdom) } : null;
         `);
     },
-    'i-for' (expr, vdom) {
-        let matches = expr.match(/(.+) of (.+)/);
+    '^i-for$' (attr, vdom) {
+        let matches = attr.value.match(/(.+) of (.+)/);
         let target = matches[2].trim();
         let localVar = matches[1].trim();
 

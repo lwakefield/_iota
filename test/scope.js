@@ -45,6 +45,15 @@ describe('exposeScope', () => {
         );
         expect(fn()).to.be.eql(1);
     });
+    it ('can mutate data', () => {
+        let data = {foo: 1};
+        let fn = exposeScope(
+            function () { this.foo = 2; },
+            data, data
+        );
+        fn();
+        expect(data).to.be.eql({foo:2});
+    });
     it ('works with empty scope', () => {
         let data = {foo: 1};
         let fn = exposeScope(

@@ -1,28 +1,46 @@
-import { expect } from 'chai';
+import {
+    expect
+} from 'chai';
 import serialize from '../src/serialize';
 import h from '../src/h';
 import parse from '../src/vdom/parse';
 
-function serializeAndNormalize (obj) {
+function serializeAndNormalize(obj) {
     return serialize(obj)
         .split('\n')
         .map(v => v.trim())
         .join('');
 }
 
+function compare(a, b) {
+    expect(serializeAndNormalize(a)).to.be.eql(serializeAndNormalize(b));
+}
+
 describe('parse', () => {
 
-    it ('parses simple', () => {
+    it('parses simple', () => {
         document.body.innerHTML = `
             <div><input type="text"><p>hello</p></div>
         `;
         let vdom = parse(document.querySelector('div'));
-        expect(serializeAndNormalize(vdom)).to.be.eql(serializeAndNormalize(
-            h('div', {}, [
-                h('input', {type: 'text'}, []),
-                h('p', {}, ['hello'])
-            ])
-        ));
+        compare(vdom, {
+            tagName: 'div',
+            attrs: {},
+            events: [],
+            children: [{
+                tagName: 'input',
+                attrs: {
+                    type: 'text'
+                },
+                events: [],
+                children: []
+            }, {
+                tagName: 'p',
+                attrs: {},
+                events: [],
+                children: ['hello']
+            }]
+        });
     });
 
     it('parses multiple children', () => {
@@ -34,77 +52,97 @@ describe('parse', () => {
             </ul>
         `;
         let vdom = parse(document.body);
-        expect(vdom).to.eql(
-            {
-                "tagName": "body", "attrs": {}, "children": [
-                    {
-                        "tagName": "ul", "attrs": {}, "children": [
-                            { "tagName": "li", "attrs": {}, "children": [ "1" ] },
-                            { "tagName": "li", "attrs": {}, "children": [ "2" ] },
-                            { "tagName": "li", "attrs": {}, "children": [ "3" ] }
-                        ]
-                    }
-                ]
-            }
-        );
+        compare(vdom, {
+            tagName: 'body',
+            attrs: {},
+            events: [],
+            children: [{
+                tagName: 'ul',
+                attrs: {},
+                events: [],
+                children: [{
+                    tagName: 'li',
+                    attrs: {},
+                    events: [],
+                    children: ['1']
+                }, {
+                    tagName: 'li',
+                    attrs: {},
+                    events: [],
+                    children: ['2']
+                }, {
+                    tagName: 'li',
+                    attrs: {},
+                    events: [],
+                    children: ['3']
+                }]
+            }]
+        });
     });
 
-    it ('parses with binding', () => {
+    it('parses with interpolation', () => {
         document.body.innerHTML = `<p>hello {{ user.name }}</p>`;
         let vdom = parse(document.querySelector('p'));
-        expect(serializeAndNormalize(vdom)).to.be.eql(serializeAndNormalize(
-            h('p', {}, [
-                function anonymous () {
+        compare(vdom, {
+            tagName: 'p',
+            attrs: {},
+            events: [],
+            children: [
+                function anonymous() {
                     return "hello " + user.name;
                 }
-            ])
-        ));
+            ]
+        });
     });
 
-    it ('parses i-for', () => {
+    it('parses i-for', () => {
         document.body.innerHTML = `
             <div><div i-for="m of messages">message: {{ m.text }}</div></div>
         `;
         let vdom = parse(document.body.querySelector('div'));
-        expect(serializeAndNormalize(vdom)).to.be.eql(serializeAndNormalize(
-            h('div', {}, [
-                function anonymous () {
-                    return messages.map(function (m) {
+        compare(vdom, {
+            tagName: 'div',
+            attrs: {},
+            events: [],
+            children: [
+                function anonymous() {
+                    return messages.map(function(m) {
                         return {
                             tagName: 'div',
                             attrs: {},
-                            children: [
-                                function anonymous () {
-                                    return "message: " + m.text;
-                                }
-                            ]
+                            events: [],
+                            children: [function anonymous() {
+                                return "message: " + m.text;
+                            }]
                         };
-                    })
+                    });
                 }
-            ])
-        ))
+            ]
+        });
     });
 
-    it ('parses @click', () => {
-        document.body.innerHTML = `<div @click="console.log($event)"></div>`;
+    it('parses @events', () => {
+        document.body.innerHTML = `<div @click="console.log($event)"></div>`
         let vdom = parse(document.body.querySelector('div'));
-        expect(serializeAndNormalize(vdom.events)).to.be.eql(serializeAndNormalize(
-            {click: function anonymous ($event
-            /**/) {
+        compare(vdom.events, [{
+            type: 'click',
+            listener: function anonymous($event
+                /**/
+            ) {
                 return console.log($event);
-            }}
-        ));
+            }
+        }]);
     });
 
-    it ('parses :value', () => {
+    it('parses :value', () => {
         document.body.innerHTML = `<input type="text" :value="message">`;
         let vdom = parse(document.body.querySelector('input'));
-        expect(serializeAndNormalize(vdom.attrs)).to.be.eql(serializeAndNormalize(
-            {
-                type: 'text',
-                value: function anonymous () { return message; }
+        compare(vdom.attrs, {
+            type: 'text',
+            value: function anonymous() {
+                return message;
             }
-        ));
+        });
     });
 
 });
