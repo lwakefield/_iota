@@ -34,3 +34,4 @@ A lot to do still.
 - [ ] Computed getters
 - [ ] Prove security of `exposeScopce`
 - [ ] Better ability to mutate exposed scope
+- [ ] Rerun the parser when a new field is set
