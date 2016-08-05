@@ -145,4 +145,26 @@ describe('parse', () => {
         });
     });
 
+    it.only('parses i-model', () => {
+        document.body.innerHTML = `<input type="text" i-model="user.name">`;
+        let vdom = parse(document.querySelector('input'));
+        compare(vdom, {
+            tagName: 'input',
+            attrs: {
+                type: 'text',
+                value: function anonymous() {
+                    return user.name;
+                }
+            },
+            events: [{
+                type: 'change',
+                listener: function anonymous($event
+                /**/ ) {
+                    this.user.name = $event.target.value;
+                }
+            }],
+            children: []
+        });
+    });
+
 });

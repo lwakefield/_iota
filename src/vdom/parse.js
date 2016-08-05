@@ -82,13 +82,20 @@ const directives = {
         vdom.attrs[name] = new Function(`return ${attr.value};`);
         return vdom;
     },
-    'i-model' (expr, vdom) {
-        // el updates data on 'change' event
-        // adds a binding to 'value'
-        // <input type="text" i-model="message"> is sugar for:
+    'i-model' (attr, vdom) {
+        // i-model is really sugar for:
         //   <input
         //      @change="$set('message', $e.target.value)"
         //      :value="message">
+        let field = attr.value;
+        vdom.events.push({
+            type: 'change',
+            listener: new Function('$event', `
+                this.${field} = $event.target.value;
+            `)
+        })
+        vdom.attrs['value']= new Function (`return ${field};`);
+        return vdom;
     },
     '^i-if' (attr, vdom) {
         return new Function(`
