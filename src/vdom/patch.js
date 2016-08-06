@@ -5,7 +5,7 @@
  * We need to pass in scope to make sure that any event listeners we attach
  *   will have the correct scope.
  */
-export function patch(scope, rootDom, rootVdom) {
+export default function patch(scope, rootDom, rootVdom) {
     let tasks = [];
 
     // Recursively patch all children
@@ -29,12 +29,12 @@ export function patch(scope, rootDom, rootVdom) {
                     typeof nextNode === 'string' || typeof nextNode === 'number' ?
                     document.createTextNode(nextNode) :
                     document.createElement(nextNode.tagName)
-                tasks.push(dom.appendChild.bind(dom, child))
+                dom.appendChild(child);
                 _patch(child, nextNode);
                 continue;
             }
             if (currNode) {
-                tasks.push(removeNode.bind(null, currNode));
+                removeNode(currNode);
                 continue;
             }
         }
@@ -43,16 +43,14 @@ export function patch(scope, rootDom, rootVdom) {
     function patchEvents(dom, vdom) {
         if (dom.__eventListeners) {
             for (let v of dom.__eventListeners) {
-                tasks.push(() => dom.removeEventListener(v.type, v.listener));
+                dom.removeEventListener(v.type, v.listener);
             }
         }
         dom.__eventListeners = [];
         for (let v of vdom.events) {
             v.listener = v.listener.bind(scope);
-            tasks.push(() => {
-                dom.addEventListener(v.type, v.listener);
-                dom.__eventListeners.push(v);
-            });
+            dom.addEventListener(v.type, v.listener);
+            dom.__eventListeners.push(v);
         }
     }
 
@@ -71,14 +69,14 @@ export function patch(scope, rootDom, rootVdom) {
             let nextVal = nextAttrs[k];
             let currVal = currAttrs[k];
             if (nextVal !== currVal) {
-                tasks.push(() => dom.setAttribute(k, nextVal));
+                dom.setAttribute(k, nextVal);
             }
         }
         // If there are some attrs on node that don't exist in nextAttrs,
         //   then we need to remove them
         for (let k in currAttrs) {
             if (!nextAttrs[k]) {
-                tasks.push(() => dom.removeAttribute(k));
+                dom.removeAttribute(k);
             }
         }
     }
@@ -88,19 +86,20 @@ export function patch(scope, rootDom, rootVdom) {
             // TODO: Sloppy naming, fix this up
             let n = newNode(vdom.tagName, vdom.attrs, vdom.events);
             const olddom = dom;
-            return [replaceNode.bind(null, olddom, n), n];
+            replaceNode(olddom, n);
+            return n;
         }
-        return [undefined, dom];
+        return dom;
     }
 
     function patchText(dom, vdom) {
         // Dom is not a TextNode, replace it
         if (!dom.splitText) {
-            tasks.push(replaceNode.bind(null, dom, newTextNode(vdom)));
+            replaceNode(dom, newTextNode(vdom));
         }
         // Dom content does not match
         if (dom.textContent !== vdom) {
-            tasks.push(() => dom.textContent = vdom);
+            dom.textContent = vdom;
         }
     }
 
@@ -108,9 +107,7 @@ export function patch(scope, rootDom, rootVdom) {
         if (typeof vdom === 'string') return patchText(dom, vdom);
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
-        let task;
-        [task, dom] = patchNode(dom, vdom);
-        if (task) tasks.push(task);
+        dom = patchNode(dom, vdom);
 
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom);
@@ -142,32 +139,4 @@ function replaceNode(oldNode, newNode) {
     if (!oldNode.parentNode) return;
     oldNode.parentNode.replaceChild(newNode, oldNode);
     oldNode = null;
-}
-
-/**
- * scheduleFlush will call all tasks, and then done when finished
- * tasks will be called in batches, where a batch takes less than 5ms
- * If a batch takes longer than 5ms, then it will be rescheduled for next frame
- */
-const requestAnimationFrame = window.requestAnimationFrame ||
-    (cb => setTimeout(cb, 16));
-
-export function scheduleFlush(tasks, done = () => {}) {
-    requestAnimationFrame(flush.bind(null, tasks, done));
-}
-
-const TIME_LIMIT = 5;
-
-function flush(tasks, done) {
-    let start = Date.now();
-    while (tasks.length) {
-        // Run the next task
-        (tasks.shift())();
-
-        // We have run out of time, schedule another flush
-        if ((Date.now() - start) > TIME_LIMIT) {
-            return scheduleFlush(tasks, done);
-        }
-    }
-    done();
 }

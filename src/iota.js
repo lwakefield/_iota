@@ -6,7 +6,10 @@ import serialize from './serialize';
 
 import parse from './vdom/parse';
 import expand from './vdom/expand';
-import { patch, scheduleFlush } from './vdom/patch';
+import patch  from './vdom/patch';
+
+const requestAnimationFrame = window.requestAnimationFrame ||
+    (cb => setTimeout(cb, 16));
 
 export default class Iota {
 
@@ -47,9 +50,8 @@ export default class Iota {
     $forceUpdate () {
         this._updating = true;
         let vdom = this._expandVdom();
-        // let tasks = patch.apply(this, [this.$el, vdom]);
-        let tasks = patch(this, this.$el, vdom);
-        scheduleFlush(tasks, () => {
+        requestAnimationFrame(() => {
+            patch(this, this.$el, vdom);
             this._updating = false;
             this._nextTickHandler();
         });
