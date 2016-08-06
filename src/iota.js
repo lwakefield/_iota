@@ -48,7 +48,7 @@ export default class Iota {
         this._updating = true;
         let vdom = this._expandVdom();
         // let tasks = patch.apply(this, [this.$el, vdom]);
-        let tasks = patch.call(this, this.$el, vdom);
+        let tasks = patch(this, this.$el, vdom);
         scheduleFlush(tasks, () => {
             this._updating = false;
             this._nextTickHandler();
