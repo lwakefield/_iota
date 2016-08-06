@@ -71,8 +71,8 @@ export default function patch(scope, rootDom, rootVdom) {
         // Update if the nextVal differs
         function addAndUpdate () {
             let keys = Object.keys(nextAttrs);
-            let i = keys.length;
-            while (i--) {
+            let length = keys.length;
+            for (let i = 0; i < length; i++) {
                 let key = keys[i];
                 let nextVal = nextAttrs[key];
                 let currVal = currAttrs[key];
@@ -88,8 +88,8 @@ export default function patch(scope, rootDom, rootVdom) {
         //   then we need to remove them
         function remove () {
             let keys = Object.keys(currAttrs);
-            let i = keys.length;
-            while (i--) {
+            let length = keys.length;
+            for (let i = 0; i < length; i++) {
                 let key = keys[i];
                 if (!nextAttrs[key]) {
                     dom.removeAttribute(key);
@@ -133,7 +133,6 @@ export default function patch(scope, rootDom, rootVdom) {
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom);
         return dom;
-        // patchChildren(dom, vdom);
     }
 
     // We need a preorder traversal of the dom/vdom
@@ -162,8 +161,8 @@ export default function patch(scope, rootDom, rootVdom) {
 
 function gatherAttrs (dom) {
     let attrs = {};
-    let i = dom.attributes.length;
-    while (i--) {
+    let length = dom.attributes.length;
+    for (let i = 0; i < length; i++) {
         let attr = dom.attributes[i];
         attrs[attr.name] = attr.value;
     }
