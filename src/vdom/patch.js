@@ -10,16 +10,13 @@ export default function patch(scope, rootDom, rootVdom) {
 
     // Recursively patch all children
     function patchChildren(dom, vnode) {
-        let {
-            children
-        } = vnode;
-        let length = dom.childNodes.length > children.length ?
+        let length = dom.childNodes.length > vnode.children.length ?
             dom.childNodes.length :
-            children.length;
+            vnode.children.length;
 
         for (let i = 0; i < length; i++) {
             let currNode = dom.childNodes[i];
-            let nextNode = children[i];
+            let nextNode = vnode.children[i];
             if (currNode && nextNode) {
                 _patch(currNode, nextNode);
                 continue;
@@ -40,27 +37,28 @@ export default function patch(scope, rootDom, rootVdom) {
         }
     }
 
+    // We just reattach all event listeners to make sure that all listeners
+    //   are attached to the correct dom element
     function patchEvents(dom, vdom) {
         if (dom.__eventListeners) {
-            for (let v of dom.__eventListeners) {
+            for (let i = 0; i < dom.__eventListeners.length; i++) {
+                let v = dom.__eventListeners[i];
                 dom.removeEventListener(v.type, v.listener);
             }
         }
         dom.__eventListeners = [];
-        for (let v of vdom.events) {
+        for (let i = 0; i < vdom.events.length; i++) {
+            let v = vdom.events[i];
             v.listener = v.listener.bind(scope);
             dom.addEventListener(v.type, v.listener);
             dom.__eventListeners.push(v);
         }
     }
 
+    // Update existing attrs and remove any attrs that are no longer needed
     function patchAttrs(dom, vnode) {
         let nextAttrs = vnode.attrs;
-        let currAttrs = {};
-        for (let i = 0; i < dom.attributes.length; i++) {
-            let v = dom.attributes[i];
-            currAttrs[v.name] = v.value;
-        }
+        let currAttrs = gatherAttrs(dom);
 
         // Make modifications on any existing attrs
         // Add if they don't exist
@@ -85,8 +83,7 @@ export default function patch(scope, rootDom, rootVdom) {
         if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
             // TODO: Sloppy naming, fix this up
             let n = newNode(vdom.tagName, vdom.attrs, vdom.events);
-            const olddom = dom;
-            replaceNode(olddom, n);
+            replaceNode(dom, n);
             return n;
         }
         return dom;
@@ -117,6 +114,16 @@ export default function patch(scope, rootDom, rootVdom) {
     _patch(rootDom, rootVdom);
     return tasks;
 }
+
+function gatherAttrs (dom) {
+    let attrs = {};
+    for (let i = 0; i < dom.attributes.length; i++) {
+        let attr = dom.attributes[i];
+        attrs[attr.name] = attr.value;
+    }
+    return attrs;
+}
+
 
 function removeNode(node) {
     node.remove();
