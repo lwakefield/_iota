@@ -6,35 +6,30 @@
  *   will have the correct scope.
  */
 export default function patch(scope, rootDom, rootVdom) {
-    let tasks = [];
-
     // Recursively patch all children
     function patchChildren(dom, vnode) {
         let length = dom.childNodes.length > vnode.children.length ?
             dom.childNodes.length :
             vnode.children.length;
+        let children = [];
 
         for (let i = 0; i < length; i++) {
             let currNode = dom.childNodes[i];
             let nextNode = vnode.children[i];
             if (currNode && nextNode) {
-                _patch(currNode, nextNode);
-                continue;
-            }
-            if (nextNode) {
+                children.push([currNode, nextNode]);
+            } else if (nextNode) {
                 let child =
                     typeof nextNode === 'string' || typeof nextNode === 'number' ?
                     document.createTextNode(nextNode) :
                     document.createElement(nextNode.tagName)
                 dom.appendChild(child);
-                _patch(child, nextNode);
-                continue;
-            }
-            if (currNode) {
-                removeNode(currNode);
-                continue;
+                children.push([child, nextNode]);
+            } else if (currNode) {
+                children.push([currNode, undefined]);
             }
         }
+        return children;
     }
 
     // We just reattach all event listeners to make sure that all listeners
@@ -114,9 +109,11 @@ export default function patch(scope, rootDom, rootVdom) {
         if (dom.textContent !== vdom) {
             dom.textContent = vdom;
         }
+        return dom;
     }
 
     function _patch(dom, vdom) {
+        if (vdom === undefined) return removeNode(dom);
         if (typeof vdom === 'string') return patchText(dom, vdom);
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
@@ -124,11 +121,32 @@ export default function patch(scope, rootDom, rootVdom) {
 
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom);
-        patchChildren(dom, vdom);
+        return dom;
+        // patchChildren(dom, vdom);
     }
 
-    _patch(rootDom, rootVdom);
-    return tasks;
+    // We need a preorder traversal of the dom/vdom
+    function _traverse (rootDom, rootVdom) {
+        if (!rootDom || !rootVdom) return;
+
+        let stack = [];
+        stack.push([rootDom, rootVdom]);
+        while (stack.length) {
+            let val = stack.pop();
+            let [dom, vdom] = val;
+            dom = _patch(dom, vdom);
+
+            if (!vdom || !dom) continue;
+            if (!vdom.children) continue;
+
+            let children = patchChildren(dom, vdom);
+            if (children.length) {
+                stack.push(...children);
+            }
+        }
+    }
+
+    _traverse(rootDom, rootVdom);
 }
 
 function gatherAttrs (dom) {
