@@ -1,22 +1,33 @@
-export function patch (dom, vdom) {
-    if (typeof vdom === 'string') return patchText(dom, vdom);
-    if (typeof vdom === 'number') return patchText(dom, vdom);
+export function patch (scope, dom, vdom) {
+    if (typeof vdom === 'string') return patchText.call(this, dom, vdom);
+    if (typeof vdom === 'number') return patchText.call(this, dom, vdom);
 
     let tasks = [];
-    [ tasks, dom ] = patchNode(dom, vdom);
+    [ tasks, dom ] = patchNode.call(this, dom, vdom);
 
     return tasks.concat(
-        patchAttrs(dom, vdom),
-        patchChildren(dom, vdom)
+        patchAttrs.call(this, dom, vdom),
+        patchChildren.call(this, dom, vdom),
+        patchEvents.call(this, dom, vdom)
     );
+}
 
-    // Reattach all events listeners to ensure they are correct
-    // if (dom.events) {
-    //     toArray(dom.events).forEach(v => dom.removeEventListener(v));
-    // }
-    // Object.keys(events).forEach(k => {
-    //     dom.addEventListener(k, events[k])
-    // });
+function patchEvents(dom, vdom) {
+    let tasks = [];
+    if (dom.__eventListeners) {
+        for (let v of dom.__eventListeners) {
+            tasks.push(() => dom.removeEventListener(v.type, v.listener));
+        }
+    }
+    dom.__eventListeners = [];
+    for (let v of vdom.events) {
+        v.listener = v.listener.bind(this);
+        tasks.push(() => {
+            dom.addEventListener(v.type, v.listener);
+            dom.__eventListeners.push(v);
+        });
+    }
+    return tasks;
 }
 
 function patchNode(dom, vdom) {
@@ -70,7 +81,7 @@ function patchChildren(dom, vnode) {
         let currNode = dom.childNodes[i];
         let nextNode = children[i];
         if (currNode && nextNode) {
-            tasks = tasks.concat(patch(currNode, nextNode));
+            tasks = tasks.concat(patch.call(this, currNode, nextNode));
             continue;
         }
         if (nextNode) {
@@ -79,7 +90,7 @@ function patchChildren(dom, vnode) {
                 ? document.createTextNode(nextNode)
                 : document.createElement(nextNode.tagName)
             let append = dom.appendChild.bind(dom, child);
-            tasks = tasks.concat([append], patch(child, nextNode));
+            tasks = tasks.concat([append], patch.call(this, child, nextNode));
             continue;
         }
         if (currNode) {
@@ -116,9 +127,6 @@ function newNode (name, attrs, events) {
     Object.keys(attrs).forEach(k => {
         node.setAttribute(k, attrs[k]);
     });
-    // Object.keys(events).forEach(k => {
-    //     node.addEventListener(k, events[k])
-    // });
     return node;
 }
 

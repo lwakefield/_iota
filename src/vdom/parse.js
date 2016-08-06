@@ -87,14 +87,14 @@ const directives = {
         //   <input
         //      @change="$set('message', $e.target.value)"
         //      :value="message">
-        let field = attr.value;
+        const field = attr.value;
         vdom.events.push({
-            type: 'change',
+            type: 'input',
             listener: new Function('$event', `
                 this.${field} = $event.target.value;
             `)
         })
-        vdom.attrs['value']= new Function (`return ${field};`);
+        vdom.attrs['value'] = new Function (`return ${field};`);
         return vdom;
     },
     '^i-if' (attr, vdom) {

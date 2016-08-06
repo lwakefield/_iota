@@ -17,7 +17,7 @@ const flatten = v => [].concat.apply([], v);
  */
 export default function expand (vnode) {
     if (['string', 'number'].includes(typeof vnode)) return vnode;
-    if (vnode instanceof Function) return expand(vnode.call());
+    if (vnode instanceof Function) return expand(vnode());
     if (vnode instanceof Array) {
         let result = new Array(vnode.length);
         for (let i = 0; i < vnode.length; i++) {
@@ -49,7 +49,7 @@ function getAttrs(a) {
     for (let k in a) {
         let val = a[k];
         if (val instanceof Function) {
-            val = val.call();
+            val = val();
         }
         attrs[k] = val;
     }

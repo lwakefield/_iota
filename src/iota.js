@@ -20,17 +20,19 @@ export default class Iota {
         observe(this.$data, this.$update.bind(this));
         proxy(this, this.$data);
 
-        this.$methods = {};
-        if (options.methods) {
-            this.$methods = options.methods;
-            proxy(this, this.$methods);
+        this.$methods = options.methods
+            ? options.methods
+            : {};
+        for (let k in this.$methods) {
+            this.$methods[k] = this.$methods[k].bind(this);
         }
+        proxy(this, this.$methods);
 
         this._vdom = parse(this.$el);
         this._expandVdom = exposeScope(
             `return __expand(${serialize(this._vdom)})`,
             this,
-            this.$data, this.$methods, { __expand: expand }
+            this.$data, this.$methods, { __expand: expand, $set: this.$set }
         );
         this._nextTickCallBacks = [];
 
@@ -45,7 +47,8 @@ export default class Iota {
     $forceUpdate () {
         this._updating = true;
         let vdom = this._expandVdom();
-        let tasks = patch(this.$el, vdom);
+        // let tasks = patch.apply(this, [this.$el, vdom]);
+        let tasks = patch.call(this, this.$el, vdom);
         scheduleFlush(tasks, () => {
             this._updating = false;
             this._nextTickHandler();
