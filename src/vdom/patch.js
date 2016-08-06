@@ -63,20 +63,36 @@ export default function patch(scope, rootDom, rootVdom) {
         // Make modifications on any existing attrs
         // Add if they don't exist
         // Update if the nextVal differs
-        for (let k in nextAttrs) {
-            let nextVal = nextAttrs[k];
-            let currVal = currAttrs[k];
-            if (nextVal !== currVal) {
-                dom.setAttribute(k, nextVal);
+        function addAndUpdate () {
+            let keys = Object.keys(nextAttrs);
+            let i = keys.length;
+            while (i--) {
+                let key = keys[i];
+                let nextVal = nextAttrs[key];
+                let currVal = currAttrs[key];
+                if (key === 'value' && isFormEl(dom)) {
+                    dom.value = nextVal;
+                } else if (nextVal !== currVal) {
+                    dom.setAttribute(key, nextVal);
+                }
             }
         }
+
         // If there are some attrs on node that don't exist in nextAttrs,
         //   then we need to remove them
-        for (let k in currAttrs) {
-            if (!nextAttrs[k]) {
-                dom.removeAttribute(k);
+        function remove () {
+            let keys = Object.keys(currAttrs);
+            let i = keys.length;
+            while (i--) {
+                let key = keys[i];
+                if (!nextAttrs[key]) {
+                    dom.removeAttribute(key);
+                }
             }
         }
+
+        addAndUpdate();
+        remove();
     }
 
     function patchNode(dom, vdom) {
@@ -117,13 +133,34 @@ export default function patch(scope, rootDom, rootVdom) {
 
 function gatherAttrs (dom) {
     let attrs = {};
-    for (let i = 0; i < dom.attributes.length; i++) {
+    let i = dom.attributes.length;
+    while (i--) {
         let attr = dom.attributes[i];
         attrs[attr.name] = attr.value;
     }
     return attrs;
 }
 
+const formEls = [
+    'button',
+    'datalist',
+    'fieldset',
+    'form',
+    'input',
+    'keygen',
+    'label',
+    'legend',
+    'meter',
+    'optgroup',
+    'option',
+    'output',
+    'progress',
+    'select',
+    'textarea'
+].join('|')
+function isFormEl(node) {
+    return node.tagName.toLowerCase().match(formEls);
+}
 
 function removeNode(node) {
     node.remove();
