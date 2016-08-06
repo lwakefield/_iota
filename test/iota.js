@@ -27,23 +27,20 @@ describe('Iota', () => {
     });
 
     it('Does attr binding', done => {
-        document.body.innerHTML = `
-        <div>
-            <input type="text" :value="message">
-        </div>`;
+        document.body.innerHTML = '<img :src="imgSrc">';
 
-        let el = document.querySelector('div');
+        let el = document.querySelector('img');
 
         let iota = new Iota({
             el: el,
             data: {
-                message: 'hello world'
+                imgSrc: '/img.jpg'
             }
         });
 
         iota.$nextTick(() => {
             expect(el.outerHTML).to.be.eql(
-                '<div><input type="text" value="hello world"></div>'
+                '<img src="/img.jpg">'
             )
             done();
         });

@@ -145,7 +145,7 @@ describe('parse', () => {
         });
     });
 
-    it.only('parses i-model', () => {
+    it('parses i-model', () => {
         document.body.innerHTML = `<input type="text" i-model="user.name">`;
         let vdom = parse(document.querySelector('input'));
         compare(vdom, {
@@ -157,7 +157,7 @@ describe('parse', () => {
                 }
             },
             events: [{
-                type: 'change',
+                type: 'input',
                 listener: function anonymous($event
                 /**/ ) {
                     this.user.name = $event.target.value;
