@@ -50,11 +50,9 @@ export default class Iota {
     $forceUpdate () {
         this._updating = true;
         let vdom = this._expandVdom();
-        requestAnimationFrame(() => {
-            patch(this, this.$el, vdom);
-            this._updating = false;
-            this._nextTickHandler();
-        });
+        patch(this, this.$el, vdom);
+        this._updating = false;
+        this._nextTickHandler();
     }
 
     $nextTick (fn) {
