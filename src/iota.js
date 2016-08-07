@@ -31,11 +31,6 @@ export default class Iota {
         proxy(this, this.$methods);
 
         this._vdom = parse(this.$el);
-        this._expandVdom = exposeScope(
-            `return __expand(${serialize(this._vdom)})`,
-            this,
-            this.$data, this.$methods, { __expand: expand, $set: this.$set }
-        );
         this._patch = exposeScope(
             `__patch(this, $el, ${serialize(this._vdom)})`,
             this,
