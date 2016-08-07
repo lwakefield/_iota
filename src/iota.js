@@ -5,7 +5,6 @@ import exposeScope from './scope';
 import serialize from './serialize';
 
 import parse from './vdom/parse';
-import expand from './vdom/expand';
 import patch  from './vdom/patch';
 
 const requestAnimationFrame = window.requestAnimationFrame ||
@@ -37,6 +36,11 @@ export default class Iota {
             this,
             this.$data, this.$methods, { __expand: expand, $set: this.$set }
         );
+        this._patch = exposeScope(
+            `__patch(this, $el, ${serialize(this._vdom)})`,
+            this,
+            this.$data, this.$methods, { __patch: patch, $set: this.$set, $el: this.$el }
+        );
         this._nextTickCallBacks = [];
 
         this.$forceUpdate();
@@ -49,8 +53,7 @@ export default class Iota {
 
     $forceUpdate () {
         this._updating = true;
-        let vdom = this._expandVdom();
-        patch(this, this.$el, vdom);
+        this._patch();
         this._updating = false;
         this._nextTickHandler();
     }

@@ -6,32 +6,6 @@
  *   will have the correct scope.
  */
 export default function patch(scope, rootDom, rootVdom) {
-    // Recursively patch all children
-    function patchChildren(dom, vnode) {
-        let length = dom.childNodes.length > vnode.children.length ?
-            dom.childNodes.length :
-            vnode.children.length;
-        let children = [];
-
-        for (let i = 0; i < length; i++) {
-            let currNode = dom.childNodes[i];
-            let nextNode = vnode.children[i];
-            if (currNode && nextNode) {
-                children.push([currNode, nextNode]);
-            } else if (nextNode) {
-                let child =
-                    typeof nextNode === 'string' || typeof nextNode === 'number' ?
-                    document.createTextNode(nextNode) :
-                    document.createElement(nextNode.tagName)
-                dom.appendChild(child);
-                children.push([child, nextNode]);
-            } else if (currNode) {
-                children.push([currNode, undefined]);
-            }
-        }
-        return children;
-    }
-
     // We just reattach all event listeners to make sure that all listeners
     //   are attached to the correct dom element
     function patchEvents(dom, vdom) {
@@ -70,15 +44,16 @@ export default function patch(scope, rootDom, rootVdom) {
         // Add if they don't exist
         // Update if the nextVal differs
         function addAndUpdate () {
-            let keys = Object.keys(nextAttrs);
-            let length = keys.length;
-            for (let i = 0; i < length; i++) {
-                let key = keys[i];
+            for (let key in nextAttrs) {
                 let nextVal = nextAttrs[key];
                 let currVal = currAttrs[key];
+                if (nextVal instanceof Function) {
+                    nextVal = nextVal();
+                }
                 if (key === 'value' && isFormEl(dom)) {
                     dom.value = nextVal;
                 } else if (nextVal !== currVal) {
+                    dom.__attrs[key] = nextVal;
                     dom.setAttribute(key, nextVal);
                 }
             }
@@ -87,18 +62,15 @@ export default function patch(scope, rootDom, rootVdom) {
         // If there are some attrs on node that don't exist in nextAttrs,
         //   then we need to remove them
         function remove () {
-            let keys = Object.keys(currAttrs);
-            let length = keys.length;
-            for (let i = 0; i < length; i++) {
-                let key = keys[i];
+            for (let key in currAttrs) {
                 if (!nextAttrs[key]) {
-                    dom.removeAttribute(key);
+                    dom.removeAttribute(name);
                 }
             }
         }
 
-        addAndUpdate();
         remove();
+        addAndUpdate();
     }
 
     function patchNode(dom, vdom) {
@@ -135,38 +107,65 @@ export default function patch(scope, rootDom, rootVdom) {
         return dom;
     }
 
-    // We need a preorder traversal of the dom/vdom
-    function _traverse (rootDom, rootVdom) {
-        if (!rootDom || !rootVdom) return;
+    function walk (dom, vdom) {
+        dom = _patch(dom, vdom);
 
-        let stack = [];
-        stack.push([rootDom, rootVdom]);
-        while (stack.length) {
-            let val = stack.pop();
-            let [dom, vdom] = val;
-            dom = _patch(dom, vdom);
+        if (!vdom.children) return;
 
-            if (!vdom || !dom) continue;
-            if (!vdom.children) continue;
+        let nextChildren = collectChildren(vdom);
+        let currChildren = dom.childNodes;
 
-            let children = patchChildren(dom, vdom);
-            if (children.length) {
-                stack.push(...children);
+        let length = currChildren.length > nextChildren.length
+            ? currChildren.length
+            : nextChildren.length;
+
+        for (let i = 0; i < length; i++) {
+            let currNode = currChildren[i];
+            let nextNode = nextChildren[i];
+            if (currNode && nextNode) {
+                walk(currNode, nextNode);
+            } else if (nextNode) {
+                let child =
+                    typeof nextNode === 'string' || typeof nextNode === 'number' ?
+                    document.createTextNode(nextNode) :
+                    document.createElement(nextNode.tagName)
+                dom.appendChild(child);
+                walk(child, nextNode);
+            } else if (currNode) {
+                removeNode(currNode);
             }
         }
     }
 
-    _traverse(rootDom, rootVdom);
+    function collectChildren (vdom) {
+        let children = [];
+        for (let i = 0; i < vdom.children.length; i++) {
+            let child = vdom.children[i];
+            while (child instanceof Function) {
+                child = child();
+            }
+            if (child instanceof Array) {
+                children.push(...child);
+            } else {
+                children.push(child);
+            }
+        }
+        return children;
+    }
+
+    walk(rootDom, rootVdom);
 }
 
 function gatherAttrs (dom) {
-    let attrs = {};
+    if (dom.__attrs) return dom.__attrs;
+
+    dom.__attrs = {};
     let length = dom.attributes.length;
     for (let i = 0; i < length; i++) {
         let attr = dom.attributes[i];
-        attrs[attr.name] = attr.value;
+        dom.__attrs[attr.name] = attr.value;
     }
-    return attrs;
+    return dom.__attrs;
 }
 
 const formEls = [
