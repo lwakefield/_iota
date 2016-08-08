@@ -13,7 +13,7 @@
           <td class="query-count">
             <span class="{{db.lastSample.countClassName}}">{{db.lastSample.nbQueries}}</span>
           </td>
-          <td i-for="q of db.lastSample.topFiveQueries" class="Query {{q.elapsedClassName}}">
+          <td i-for="q of db.lastSample.topFiveQueries" class="{{q.elapsedClassName}}">
             {{q.formatElapsed}}
             <div class="popover left">
               <div class="popover-content">{{q.query}}</div>
@@ -30,12 +30,10 @@
   <script src="./memory-stats.js"></script>
   <script src="./monitor.js"></script>
 
-  <style type="text/css" media="screen">
-      .popover { display: none };
-  </style>
+  <link rel="stylesheet" href="./style.css" type="text/css">
 
   <script type="text/javascript" charset="utf-8">
-    let app = new Iota({
+    var app = new Iota({
         el: document.querySelector('#app'),
         data: {
             databases: []
@@ -44,7 +42,7 @@
     function loadSamples () {
         app.databases = ENV.generateData().toArray();
         Monitoring.renderRate.ping();
-        setTimeout(loadSamples, 1000);
+        setTimeout(loadSamples, 0);
     }
     loadSamples();
   </script>

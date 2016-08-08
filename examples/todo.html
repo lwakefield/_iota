@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Todo</title>
+    </head>
+    <body>
+        <div id="app">
+            <input type="text" i-model="newTask" @keyup="processKey($event)">
+            <p>{{ newTask }}</p>
+        </div>
+        <script src="../dist/iota.js"></script>
+        <script>
+            var app = new Iota({
+                el: document.querySelector('#app'),
+                data: {
+                    newTask: ''
+                },
+                methods: {
+                    processKey (e) {
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
