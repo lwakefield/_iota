@@ -43,7 +43,8 @@ export default class Iota {
 
     $update () {
         if (this._updating) return;
-        setTimeout(this.$forceUpdate.bind(this), 0);
+        this.$forceUpdate();
+        // setTimeout(this.$forceUpdate.bind(this), 0);
     }
 
     $forceUpdate () {

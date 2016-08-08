@@ -25,20 +25,18 @@ export default function patch(scope, rootDom, rootVdom) {
         patchEvents(dom, vdom);
 
         if (!vdom.children) return;
-        patchChildren(dom, vdom);
+
+        patchChildren(dom, collectChildren(vdom));
+
     }
     _patch(rootDom, rootVdom);
 
     function patchText(dom, vdom) {
-        // Dom is not a TextNode, replace it
         if (!(dom instanceof Text)) {
             replaceNode(dom, newTextNode(vdom));
-        }
-        // Dom content does not match
-        if (dom.nodeValue !== vdom) {
+        } else if (dom.nodeValue !== vdom) {
             dom.nodeValue = vdom;
         }
-        return dom;
     }
 
     function patchNode(dom, vdom) {
@@ -118,33 +116,37 @@ export default function patch(scope, rootDom, rootVdom) {
         dom.__eventListeners = listeners;
     }
 
-    function patchChildren(dom, vdom) {
-        let nextChildren = collectChildren(vdom);
-        let currChildren = dom.childNodes;
-
-        let domLength = currChildren.length;
-        let vdomLength = nextChildren.length;
-        let len = domLength > vdomLength ? domLength : vdomLength;
-
+    function patchChildren(dom, nextChildren) {
+        let len = nextChildren.length;
+        let currNode = dom.firstChild;
         for (let i = 0; i < len; i++) {
-            let currNode = currChildren[i];
             let nextNode = nextChildren[i];
             patchChild(dom, currNode, nextNode);
+            if (currNode) currNode = currNode.nextSibling;
+        }
+
+        cleanChildren(currNode);
+    }
+
+    function cleanChildren (child) {
+        while (child) {
+            let nextChild = child.nextSibling;
+            removeNode(child);
+            child = nextChild;
         }
     }
 
     function patchChild(parent, node, vnode) {
-        if (node && vnode) {
+        if (node) {
             _patch(node, vnode);
-        } else if (vnode) {
-            let child =
-                typeof vnode === 'string' || typeof vnode === 'number'
-                    ? newTextNode(vnode)
-                    : newNode(vnode.tagName);
+        } else if (typeof vnode === 'string' || typeof vnode === 'number') {
+            let child = newTextNode(vnode);
             parent.appendChild(child);
             _patch(child, vnode);
-        } else if (node) {
-            removeNode(node);
+        } else {
+            let child = newNode(vnode.tagName);
+            parent.appendChild(child);
+            _patch(child, vnode);
         }
     }
 
