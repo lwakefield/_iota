@@ -24,18 +24,21 @@ export default function patch(scope, rootDom, rootVdom) {
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom);
 
-        if (!vdom.children) return;
+        if (!vdom.children) return dom;
 
         patchChildren(dom, collectChildren(vdom));
-
+        return dom;
     }
     _patch(rootDom, rootVdom);
 
     function patchText(dom, vdom) {
         if (!(dom instanceof Text)) {
-            replaceNode(dom, newTextNode(vdom));
+            let textNode = newTextNode(vdom);
+            replaceNode(dom, textNode);
+            return textNode;
         } else if (dom.nodeValue !== vdom) {
             dom.nodeValue = vdom;
+            return dom;
         }
     }
 
@@ -121,7 +124,7 @@ export default function patch(scope, rootDom, rootVdom) {
         let currNode = dom.firstChild;
         for (let i = 0; i < len; i++) {
             let nextNode = nextChildren[i];
-            patchChild(dom, currNode, nextNode);
+            currNode = patchChild(dom, currNode, nextNode);
             if (currNode) currNode = currNode.nextSibling;
         }
 
@@ -138,15 +141,15 @@ export default function patch(scope, rootDom, rootVdom) {
 
     function patchChild(parent, node, vnode) {
         if (node) {
-            _patch(node, vnode);
+            return _patch(node, vnode);
         } else if (typeof vnode === 'string' || typeof vnode === 'number') {
             let child = newTextNode(vnode);
             parent.appendChild(child);
-            _patch(child, vnode);
+            return _patch(child, vnode);
         } else {
             let child = newNode(vnode.tagName);
             parent.appendChild(child);
-            _patch(child, vnode);
+            return _patch(child, vnode);
         }
     }
 
