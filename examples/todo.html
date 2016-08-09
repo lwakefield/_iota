@@ -8,17 +8,25 @@
     <body>
         <div id="app">
             <input type="text" i-model="newTask" @keyup="processKey($event)">
-            <p>{{ newTask }}</p>
+            <p>Task to add: {{ newTask }}</p>
+            <ul>
+                <li i-for="t of tasks">{{ t }}</li>
+            </ul>
         </div>
         <script src="../dist/iota.js"></script>
         <script>
             var app = new Iota({
                 el: document.querySelector('#app'),
                 data: {
-                    newTask: ''
+                    newTask: 'My first task',
+                    tasks: []
                 },
                 methods: {
                     processKey (e) {
+                        if (e.key.toLowerCase() === 'enter') {
+                            this.tasks = this.tasks.concat([this.newTask]);
+                            this.newTask = '';
+                        }
                     }
                 }
             });
