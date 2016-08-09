@@ -26,10 +26,12 @@ the source and fully understand what is going on.
 
 A lot to do still.
 
-- [ ] Speed up the `patch` and `expand` functions, if possible
-- [ ] Implement `i-model`
+- [x] Speed up the `patch` and `expand` functions, if possible
+    - [ ] Move to a non-recursive patch function
+    - [ ] Move vdom attrs to an array for faster traversal
+- [x] Implement `i-model`
 - [ ] Implement component system
-- [ ] Implement event system
+- [x] Implement event system
 - [ ] Lifecycle and ability to destroy the iota instance
 - [ ] Computed getters
 - [ ] Prove security of `exposeScopce`
