@@ -22,18 +22,57 @@ I also found that a lot of frameworks seemed to over complicate the workings of 
 As a result, I really wanted to focus on the readability of the code, in such a way that you can have a qiuck read of 
 the source and fully understand what is going on.
 
+# The Magic
+
+Iota passes the existing DOM into a Virtual DOM. Where there are dynamic components, like `i-if`/`i-for` or interpolations like `{{ user.name }}`, the vdom object will return a function instead of a JavaScript object. Our vdom object might look like this:
+
+    {
+        tagName: 'div',
+        attrs: {},
+        events: [],
+        children: [
+            function anonymous() {
+                return messages.map(function(m) {
+                    return {
+                        tagName: 'div',
+                        attrs: {},
+                        events: [],
+                        children: [function anonymous() {
+                            return "message: " + m.text;
+                        }]
+                    };
+                });
+            }
+        ]
+    }
+    
+Because we don't know what data will be passed in from dynamic components/interpolations, our vdom will be referencing variables that do not exist in the scope of the vdom. Most frameworks solve this by parsing and compiling the expressions before hand, or more explicitly defining the data which will be passed in. We get around this with a magic function `exposeScope` which will receive a function and some data, and return a new function with the scope exposed to the inner function.
+
+The rest of the code base I have tried to keep as simple as possible.
+
 # Tasks
 
 A lot to do still.
 
 - [x] Speed up the `patch` and `expand` functions, if possible
-    - [ ] Move to a non-recursive patch function
-    - [ ] Move vdom attrs to an array for faster traversal
+    - [ ] ~~Move to a non-recursive patch function~~ Non-recursive is not faster
+    - [ ] ~~Move vdom attrs to an array for faster traversal~~ Instead we create a new field on a dom with the attrs we manage
 - [x] Implement `i-model`
 - [ ] Implement component system
+    - Components should not depend on their parent.
+    - Components should only depend on their props
+    - This needs to be done incrementally
+        - [x] Single components that standalone ie. don't depend on props.
+        - [ ] Components with directives, `i-for` will be the difficult one.
+        - [ ] Recursive components - I haven't though about this too much yet.
+    - Components can have child dom elements passed in.
+        - The child dom elements should not depend on the props passed in.
 - [x] Implement event system
 - [ ] Lifecycle and ability to destroy the iota instance
 - [ ] Computed getters
-- [ ] Prove security of `exposeScopce`
+- [ ] Prove security of `exposeScope`
 - [ ] Better ability to mutate exposed scope
+    - We can do `this.foo = 'newval'`
+    - We would like to do `foo = 'newval'`. This may not be possible and may be discouraged anyway.
 - [ ] Rerun the parser when a new field is set
+    - Alternatively, enforce that all data is exposed before instantiation. This may be preferred.
