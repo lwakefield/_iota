@@ -10,6 +10,15 @@
 Give it the ol' college `npm install`, then you can run `npm run dev` to spin up a dev server and have a play.
 If you want to make a build, then `npm install`.
 
+There are some VERY basic examples that will be shown when your run the dev server.
+
+- dbmon is a demonstration of the repaint rate. Ie. make a change to the data
+  in the Iota instance, see how long it takes to render that change. Then do 
+  this again and again as fast as possible, to give an idea of the max FPS
+  achievable.
+- Simple components demonstration.
+- Simple todo app demonstration.
+
 # Why
 
 Why not.
