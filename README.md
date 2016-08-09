@@ -62,9 +62,9 @@ A lot to do still.
     - Components should not depend on their parent.
     - Components should only depend on their props
     - This needs to be done incrementally
-        1. Single components without directives.
-        2. Components with directives, `i-for` will be the difficult one.
-        3. Recursive components - I haven't though about this too much yet.
+        - [x] Single components that standalone ie. don't depend on props.
+        - [ ] Components with directives, `i-for` will be the difficult one.
+        - [ ] Recursive components - I haven't though about this too much yet.
     - Components can have child dom elements passed in.
         - The child dom elements should not depend on the props passed in.
 - [x] Implement event system
