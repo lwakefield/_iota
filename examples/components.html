@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Components</title>
+    </head>
+    <body>
+        <div id="app">
+            <counter></counter>
+            <counter></counter>
+            <counter></counter>
+            <counter></counter>
+            <counter></counter>
+
+        </div>
+
+        <template id="counter">
+            <section>
+                <button @click="increment()">+1</button>
+                <p>{{ counter }}</p>
+            </section>
+        </template>
+
+        <script src="../dist/iota.js"></script>
+        <script>
+            Iota.registerComponent('counter', {
+                data: {
+                    counter: 0
+                },
+                el: document.querySelector('#counter'),
+                methods: {
+                    increment () {
+                        this.counter++
+                    }
+                }
+            });
+
+            var app = new Iota({
+                el: document.querySelector('#app'),
+            });
+        </script>
+    </body>
+</html>
+
