@@ -27,13 +27,24 @@ the source and fully understand what is going on.
 A lot to do still.
 
 - [x] Speed up the `patch` and `expand` functions, if possible
-    - [ ] Move to a non-recursive patch function
-    - [ ] Move vdom attrs to an array for faster traversal
+    - [ ] ~~Move to a non-recursive patch function~~ Non-recursive is not faster
+    - [ ] ~~Move vdom attrs to an array for faster traversal~~ Instead we create a new field on a dom with the attrs we manage
 - [x] Implement `i-model`
 - [ ] Implement component system
+    - Components should not depend on their parent.
+    - Components should only depend on their props
+    - This needs to be done incrementally
+        1. Single components without directives.
+        2. Components with directives, `i-for` will be the difficult one.
+        3. Recursive components - I haven't though about this too much yet.
+    - Components can have child dom elements passed in.
+        - The child dom elements should not depend on the props passed in.
 - [x] Implement event system
 - [ ] Lifecycle and ability to destroy the iota instance
 - [ ] Computed getters
-- [ ] Prove security of `exposeScopce`
+- [ ] Prove security of `exposeScope`
 - [ ] Better ability to mutate exposed scope
+    - We can do `this.foo = 'newval'`
+    - We would like to do `foo = 'newval'`. This may not be possible and may be discouraged anyway.
 - [ ] Rerun the parser when a new field is set
+    - Alternatively, enforce that all data is exposed before instantiation. This may be preferred.
