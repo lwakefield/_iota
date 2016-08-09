@@ -22,6 +22,34 @@ I also found that a lot of frameworks seemed to over complicate the workings of 
 As a result, I really wanted to focus on the readability of the code, in such a way that you can have a qiuck read of 
 the source and fully understand what is going on.
 
+# The Magic
+
+Iota passes the existing DOM into a Virtual DOM. Where there are dynamic components, like `i-if`/`i-for` or interpolations like `{{ user.name }}`, the vdom object will return a function instead of a JavaScript object. Our vdom object might look like this:
+
+    {
+        tagName: 'div',
+        attrs: {},
+        events: [],
+        children: [
+            function anonymous() {
+                return messages.map(function(m) {
+                    return {
+                        tagName: 'div',
+                        attrs: {},
+                        events: [],
+                        children: [function anonymous() {
+                            return "message: " + m.text;
+                        }]
+                    };
+                });
+            }
+        ]
+    }
+    
+Because we don't know what data will be passed in from dynamic components/interpolations, our vdom will be referencing variables that do not exist in the scope of the vdom. Most frameworks solve this by parsing and compiling the expressions before hand, or more explicitly defining the data which will be passed in. We get around this with a magic function `exposeScope` which will receive a function and some data, and return a new function with the scope exposed to the inner function.
+
+The rest of the code base I have tried to keep as simple as possible.
+
 # Tasks
 
 A lot to do still.
