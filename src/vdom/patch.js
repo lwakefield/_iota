@@ -8,6 +8,7 @@ import {
     newTextNode,
     replaceNode
 } from '../dom/util';
+import { components } from '../components';
 /**
  * The patch function walks the dom, diffing with the vdom along the way.
  * When there is a difference, the dom will be patched.
@@ -20,6 +21,8 @@ export default function patch(scope, rootDom, rootVdom) {
         if (typeof vdom === 'string') return patchText(dom, vdom);
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
+        if (vdom.isComponent) return patchComponent(dom, vdom);
+
         dom = patchNode(dom, vdom);
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom);
@@ -30,6 +33,18 @@ export default function patch(scope, rootDom, rootVdom) {
         return dom;
     }
     _patch(rootDom, rootVdom);
+
+    function patchComponent (dom, vdom) {
+        if (vdom.isMounted) {
+            // parse in props
+        } else {
+            let instance = components[vdom.tagName].newInstance();
+            replaceNode(dom, instance.$el);
+            instance.isMounted = true;
+            instances[vdom.tagName][vdom.uid] = instance;
+            return instance.$el;
+        }
+    }
 
     function patchText(dom, vdom) {
         if (!(dom instanceof Text)) {

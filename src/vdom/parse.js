@@ -1,4 +1,5 @@
 import serialize from '../serialize';
+import { components, registerInstance } from '../components';
 
 const toArray = v => [].slice.call(v);
 const getDir = (el, dir) => toArray(el.attributes)
@@ -19,6 +20,9 @@ export default function parse (el) {
             ? interpolate(text)
             : text.trim();
     }
+
+    let tagName = el.tagName.toLowerCase()
+    if (components[tagName]) return registerInstance(tagName);
 
     let vdom = {
         tagName: el.tagName.toLowerCase(),
