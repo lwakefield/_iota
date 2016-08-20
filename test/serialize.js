@@ -86,6 +86,14 @@ describe('serialize', () => {
     it('works on an empty arr', () => {
         serializeAndCompare([], '[]');
     });
+
+    // This is not possible
+    // it('works with variables inside objects', () => {
+    //     // eslint-disable-next-line
+    //     serializeAndCompare({ foo: bar }, `
+    //         foo: bar
+    //     `);
+    // });
 });
 
 function serializeAndCompare (from, to) {

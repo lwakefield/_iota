@@ -9,6 +9,7 @@ import {
     replaceNode
 } from '../dom/util';
 import { components } from '../components';
+
 /**
  * The patch function walks the dom, diffing with the vdom along the way.
  * When there is a difference, the dom will be patched.
@@ -16,7 +17,7 @@ import { components } from '../components';
  * We need to pass in scope to make sure that any event listeners we attach
  *   will have the correct scope.
  */
-export default function patch(scope, rootDom, rootVdom) {
+export default function patch(scope, pool, rootDom, rootVdom) {
     function _patch (dom, vdom) {
         if (typeof vdom === 'string') return patchText(dom, vdom);
         if (typeof vdom === 'number') return patchText(dom, vdom);
@@ -35,13 +36,11 @@ export default function patch(scope, rootDom, rootVdom) {
     _patch(rootDom, rootVdom);
 
     function patchComponent (dom, vdom) {
-        if (vdom.isMounted) {
+        if (pool.get(vdom.uid)) {
             // parse in props
         } else {
-            let instance = components[vdom.tagName].newInstance();
+            const instance = pool.instantiate(vdom.uid);
             replaceNode(dom, instance.$el);
-            instance.isMounted = true;
-            instances[vdom.tagName][vdom.uid] = instance;
             return instance.$el;
         }
     }

@@ -1,5 +1,6 @@
 import serialize from '../serialize';
-import { components, registerInstance } from '../components';
+import { templates, ComponentPool } from '../components';
+import { collectComponent } from './component';
 
 const toArray = v => [].slice.call(v);
 const getDir = (el, dir) => toArray(el.attributes)
@@ -14,44 +15,55 @@ const getDir = (el, dir) => toArray(el.attributes)
  *   references properties that are not available in scope.
  */
 export default function parse (el) {
-    if (el.splitText) {
-        let text = el.textContent;
-        return needsInterpolation(text)
-            ? interpolate(text)
-            : text.trim();
+    const pool = new ComponentPool();
+    function _parse (el) {
+        if (el.splitText) {
+            let text = el.textContent;
+            return needsInterpolation(text)
+                ? interpolate(text)
+                : text.trim();
+        }
+
+        let tagName = el.tagName.toLowerCase();
+
+        if (templates[tagName]) {
+            const comp = collectComponent(el);
+            pool.register(comp);
+            return comp;
+        }
+
+        let vdom = {
+            tagName: el.tagName.toLowerCase(),
+            attrs: {},
+            events: [],
+            children: []
+        };
+        const allChildren = el.childNodes.length
+            ? toArray(el.childNodes).map(v => _parse(v))
+            : [];
+        vdom.children = allChildren
+            .filter(v => !!v)
+            .filter(v => !v.tagName || v.tagName.toLowerCase() !== 'template');
+
+        toArray(el.attributes).forEach(v => {
+            parseAttr(vdom, v);
+        });
+        Object.keys(directives).forEach(key => {
+            let attr = getDir(el, key);
+            if (!attr) return;
+            el.removeAttribute(attr.name);
+            delete vdom.attrs[attr.name];
+
+            let apply = directives[key];
+            vdom = apply(attr, vdom);
+        });
+        return vdom;
     }
 
-    let tagName = el.tagName.toLowerCase()
-    if (components[tagName]) return registerInstance(tagName);
-
-    let vdom = {
-        tagName: el.tagName.toLowerCase(),
-        attrs: {},
-        events: [],
-        children: []
-    }
-    vdom.children = (
-        el.childNodes.length
-        ? toArray(el.childNodes).map(v => parse(v))
-        : []
-    ).filter(v => !!v);
-
-    toArray(el.attributes).forEach(v => {
-        parseAttr(vdom, v);
-    });
-    Object.keys(directives).forEach(key => {
-        let attr = getDir(el, key);
-        if (!attr) return;
-        el.removeAttribute(attr.name)
-        delete vdom.attrs[attr.name];
-
-        let apply = directives[key];
-        vdom = apply(attr, vdom);
-    });
-    return vdom;
+    return [_parse(el), pool];
 }
 
-function parseAttr(vdom, attr) {
+function parseAttr (vdom, attr) {
     vdom.attrs[attr.name] = needsInterpolation(attr.value)
         ? interpolate(attr.value)
         : attr.value;
@@ -71,18 +83,21 @@ function interpolate (text) {
             return `"${v}"`;
         })
         .join(' + ');
-    return new Function(`return ${interpolation};`)
+    // eslint-disable-next-line
+    return new Function(`return ${interpolation};`);
 }
 
 const directives = {
     '^@.+' (attr, vdom) {
         let type = attr.name.replace(/^@/, '');
+        // eslint-disable-next-line
         let listener = new Function('$event', `return ${attr.value};`);
         vdom.events.push({ type, listener });
         return vdom;
     },
     '^:.+' (attr, vdom) {
         let name = attr.name.replace(/^:/, '');
+        // eslint-disable-next-line
         vdom.attrs[name] = new Function(`return ${attr.value};`);
         return vdom;
     },

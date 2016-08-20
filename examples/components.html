@@ -7,6 +7,7 @@
     </head>
     <body>
         <div id="app">
+            <h1>{{ title }}</h1>
             <counter></counter>
             <counter></counter>
             <counter></counter>
@@ -25,18 +26,21 @@
         <script src="../dist/iota.js"></script>
         <script>
             Iota.registerComponent('counter', {
-                data: {
-                    counter: 0
+                data () {
+                    return { counter: 0 };
                 },
                 el: document.querySelector('#counter'),
                 methods: {
                     increment () {
-                        this.counter++
+                        this.counter++;
                     }
                 }
             });
 
             var app = new Iota({
+                data: {
+                    title: 'hello world'
+                },
                 el: document.querySelector('#app'),
             });
         </script>

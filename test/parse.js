@@ -1,28 +1,21 @@
+/* eslint-env mocha */
 import {
     expect
 } from 'chai';
 import serialize from '../src/serialize';
-import h from '../src/h';
 import parse from '../src/vdom/parse';
-
-function serializeAndNormalize(obj) {
-    return serialize(obj)
-        .split('\n')
-        .map(v => v.trim())
-        .join('');
-}
-
-function compare(a, b) {
-    expect(serializeAndNormalize(a)).to.be.eql(serializeAndNormalize(b));
-}
+import { ComponentTemplate, templates } from '../src/components';
 
 describe('parse', () => {
+    before(() => {
+        global.Text = window.Text;
+    });
 
     it('parses simple', () => {
         document.body.innerHTML = `
             <div><input type="text"><p>hello</p></div>
         `;
-        let vdom = parse(document.querySelector('div'));
+        let [vdom] = parse(document.querySelector('div'));
         compare(vdom, {
             tagName: 'div',
             attrs: {},
@@ -51,7 +44,7 @@ describe('parse', () => {
                 <li>3</li>
             </ul>
         `;
-        let vdom = parse(document.body);
+        let [vdom] = parse(document.body);
         compare(vdom, {
             tagName: 'body',
             attrs: {},
@@ -81,14 +74,14 @@ describe('parse', () => {
     });
 
     it('parses with interpolation', () => {
-        document.body.innerHTML = `<p>hello {{ user.name }}</p>`;
-        let vdom = parse(document.querySelector('p'));
+        document.body.innerHTML = '<p>hello {{ user.name }}</p>';
+        let [vdom] = parse(document.querySelector('p'));
         compare(vdom, {
             tagName: 'p',
             attrs: {},
             events: [],
             children: [
-                function anonymous() {
+                function anonymous () {
                     return "hello " + user.name;
                 }
             ]
@@ -99,7 +92,7 @@ describe('parse', () => {
         document.body.innerHTML = `
             <div><div i-for="m of messages">message: {{ m.text }}</div></div>
         `;
-        let vdom = parse(document.body.querySelector('div'));
+        let [vdom] = parse(document.body.querySelector('div'));
         compare(vdom, {
             tagName: 'div',
             attrs: {},
@@ -123,7 +116,7 @@ describe('parse', () => {
 
     it('parses @events', () => {
         document.body.innerHTML = `<div @click="console.log($event)"></div>`
-        let vdom = parse(document.body.querySelector('div'));
+        let [vdom] = parse(document.body.querySelector('div'));
         compare(vdom.events, [{
             type: 'click',
             listener: function anonymous($event
@@ -136,7 +129,7 @@ describe('parse', () => {
 
     it('parses :value', () => {
         document.body.innerHTML = `<input type="text" :value="message">`;
-        let vdom = parse(document.body.querySelector('input'));
+        let [vdom] = parse(document.body.querySelector('input'));
         compare(vdom.attrs, {
             type: 'text',
             value: function anonymous() {
@@ -147,7 +140,7 @@ describe('parse', () => {
 
     it('parses i-model', () => {
         document.body.innerHTML = `<input type="text" i-model="user.name">`;
-        let vdom = parse(document.querySelector('input'));
+        let [vdom] = parse(document.querySelector('input'));
         compare(vdom, {
             tagName: 'input',
             attrs: {
@@ -167,4 +160,47 @@ describe('parse', () => {
         });
     });
 
+    it.only('parses component', () => {
+        document.body.innerHTML = `
+            <template id="my-component">
+                <section>
+                    <button @click="increment()">+1</button>
+                    <p>{{ counter }}</p>
+                </section>
+            </template>
+
+            <p>Hello world</p>
+            <my-component :foo="one" :bar="two"></my-component>
+        `;
+        templates['my-component'] = new ComponentTemplate('my-component', {
+            data () { return { counter: 0 }; },
+            el: '#my-component',
+            props: ['foo', 'bar'],
+            methods: {
+                increment () { this.counter++; }
+            }
+        });
+
+        let [vdom, pool] = parse(document.body);
+        expect(vdom.children.length).to.eql(2);
+        const p = vdom.children[0];
+        expect(p.tagName).to.eql('p');
+        const myComp = vdom.children[1];
+        expect(myComp.tagName).to.eql('my-component');
+        expect(myComp.isComponent).to.eql(true);
+        expect(myComp.isMounted).to.eql(false);
+        expect(pool.instances['my-component']).to.not.be.undefined;
+    });
 });
+
+function compare (a, b) {
+    expect(serializeAndNormalize(a)).to.be.eql(serializeAndNormalize(b));
+}
+
+function serializeAndNormalize (obj) {
+    return serialize(obj)
+        .split('\n')
+        .map(v => v.trim())
+        .join('');
+}
+
