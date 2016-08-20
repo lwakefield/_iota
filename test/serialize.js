@@ -1,98 +1,104 @@
+/* eslint-env mocha */
 import { expect } from 'chai';
 import serialize from '../src/serialize';
 
+
 describe('serialize', () => {
-    it ('works on a basic obj', () => {
-        expect(serialize({foo: 'hello'})).to.eql(
-`{
-  foo: 'hello'
-}`
-        );
+    it('works on a basic obj', () => {
+        serializeAndCompare({foo: 'hello'}, `
+            {
+                foo: 'hello' 
+            }
+        `);
     });
 
-    it ('works on mixed obj', () => {
-        expect(serialize({foo: 'hello', bar: 123, baz: 1.23})).to.eql(
-`{
-  foo: 'hello',
-  bar: 123,
-  baz: 1.23
-}`
-        );
+    it('works on mixed obj', () => {
+        serializeAndCompare({foo: 'hello', bar: 123, baz: 1.23}, `
+            {
+                foo: 'hello',
+                bar: 123,
+                baz: 1.23
+            }
+        `);
     });
 
-    it ('works on nested obj', () => {
-        let obj = {
-            foo: {
-                bar: {
+    it('works on nested obj', () => {
+        serializeAndCompare({ foo: { bar: { baz: 'hello' } } }, `
+            {
+                foo: {
+                    bar: {
                     baz: 'hello'
+                    }
                 }
             }
-        };
-        expect(serialize(obj)).to.eql(
-`{
-  foo: {
-    bar: {
-      baz: 'hello'
-    }
-  }
-}`
-        );
+        `);
     });
 
     it('works on an obj with a function', () => {
-        let obj = {
+        // Function.toString seems to butcher indentation
+        serializeAndCompare({
             foo: function () { console.log('hello world!'); },
             bar: 'hello'
-        };
-        // Function.toString seems to butcher indentation
-        expect(serialize(obj)).to.eql(
-`{
-  foo: function foo() {
-                console.log('hello world!');
-            },
-  bar: 'hello'
-}`
-        );
+        }, `
+            {
+                foo: function foo() {
+                    console.log('hello world!');
+                },
+                bar: 'hello'
+            }
+        `);
     });
 
     it('works on an arr', () => {
-        let arr = ['one', 'two', 'three'];
-        expect(serialize(arr)).to.eql(
-`[
-  'one',
-  'two',
-  'three'
-]`
-        )
+        serializeAndCompare(['one', 'two', 'three'], `
+            [
+                'one',
+                'two',
+                'three'
+            ]
+        `);
     });
 
     it('works on an arr of objs', () => {
-        let arr = [
+        serializeAndCompare([
             { foo: 'one' },
             { foo: 'two' },
             { foo: 'three' }
-        ];
-        expect(serialize(arr)).to.eql(
-`[
-  {
-    foo: 'one'
-  },
-  {
-    foo: 'two'
-  },
-  {
-    foo: 'three'
-  }
-]`
-        );
+        ], `
+            [
+                {
+                    foo: 'one'
+                },
+                {
+                    foo: 'two'
+                },
+                {
+                    foo: 'three'
+                }
+            ]
+        `);
     });
 
     it('works on an empty obj', () => {
-        expect(serialize({})).to.eql('{}')
-    })
+        serializeAndCompare({}, '{}');
+    });
 
     it('works on an empty arr', () => {
-        expect(serialize([])).to.eql(`[]`)
-    })
+        serializeAndCompare([], '[]');
+    });
 });
 
+function serializeAndCompare (from, to) {
+    compare(serialize(from), to);
+}
+
+function compare (from, to) {
+    const normalize = str => str
+        .trim()
+        .split('\n')
+        .filter(v => !!v.trim())
+        .map(v => v.trim())
+        .join('\n');
+
+    expect(normalize(from)).to.eql(normalize(to));
+}
