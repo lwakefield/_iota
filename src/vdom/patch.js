@@ -39,9 +39,21 @@ export default function patch (scope, pool, rootDom, rootVdom) {
             instance = pool.instantiate(vdom.uid);
             replaceNode(dom, instance.$el);
         }
-        const props = vdom.props();
-        if (props) {
-            instance.__setProps(props);
+        const newProps = vdom.props();
+        const oldProps = instance.$props;
+        // TODO: cache props
+        let keys = Object.keys(newProps);
+        let len = keys.length;
+        let needsUpdate = false;
+        for (let i = 0; i < len; i++) {
+            let key = keys[i];
+            if (oldProps[key] !== newProps[key]) {
+                needsUpdate = true;
+                continue;
+            }
+        }
+        if (newProps && needsUpdate) {
+            instance.__setProps(newProps);
             instance.$update();
         }
         return instance.$el;
