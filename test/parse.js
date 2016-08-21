@@ -127,17 +127,6 @@ describe('parse', () => {
         }]);
     });
 
-    it('parses :value', () => {
-        document.body.innerHTML = `<input type="text" :value="message">`;
-        let [vdom] = parse(document.body.querySelector('input'));
-        compare(vdom.attrs, {
-            type: 'text',
-            value: function anonymous() {
-                return message;
-            }
-        });
-    });
-
     it('parses i-model', () => {
         document.body.innerHTML = `<input type="text" i-model="user.name">`;
         let [vdom] = parse(document.querySelector('input'));
@@ -160,7 +149,7 @@ describe('parse', () => {
         });
     });
 
-    it.only('parses component', () => {
+    it('parses component', () => {
         document.body.innerHTML = `
             <template id="my-component">
                 <section>
@@ -188,7 +177,6 @@ describe('parse', () => {
         const myComp = vdom.children[1];
         expect(myComp.tagName).to.eql('my-component');
         expect(myComp.isComponent).to.eql(true);
-        expect(myComp.isMounted).to.eql(false);
         expect(pool.instances['my-component']).to.not.be.undefined;
     });
 });

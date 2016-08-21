@@ -93,12 +93,6 @@ const directives = {
         vdom.events.push({ type, listener });
         return vdom;
     },
-    '^:.+' (attr, vdom) {
-        let name = attr.name.replace(/^:/, '');
-        // eslint-disable-next-line
-        vdom.attrs[name] = new Function(`return ${attr.value};`);
-        return vdom;
-    },
     'i-model' (attr, vdom) {
         // i-model is really sugar for:
         //   <input
@@ -107,16 +101,19 @@ const directives = {
         const field = attr.value;
         vdom.events.push({
             type: 'input',
+            // eslint-disable-next-line
             listener: new Function('$event', `
                 this.${field} = $event.target.value;
             `)
-        })
+        });
+        // eslint-disable-next-line
         vdom.attrs['value'] = new Function (`return ${field};`);
         return vdom;
     },
     '^i-if' (attr, vdom) {
+        // eslint-disable-next-line
         return new Function(`
-            return ${attr.value} ? ${ serialize(vdom) } : null;
+            return ${attr.value} ? ${serialize(vdom)} : null;
         `);
     },
     '^i-for$' (attr, vdom) {
@@ -124,10 +121,11 @@ const directives = {
         let target = matches[2].trim();
         let localVar = matches[1].trim();
 
+        // eslint-disable-next-line
         return new Function(`
             return ${target}.map(function (${localVar}) {
-                return ${ serialize(vdom) };
+                return ${serialize(vdom)};
             });
         `);
-    },
+    }
 };
