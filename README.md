@@ -72,7 +72,7 @@ A lot to do still.
     - Components should only depend on their props
     - This needs to be done incrementally
         - [x] Single components that standalone ie. don't depend on props.
-        - [ ] Passing in props to components
+        - [x] Passing in props to components
         - [ ] Components with directives, `i-for` will be the difficult one.
         - [ ] Recursive components - I haven't though about this too much yet.
     - Components can have child dom elements passed in.
