@@ -43,7 +43,6 @@ export default class Iota {
             this.$data, this.$props, this.$methods,
             { __patch: patch, $el: this.$el, $pool: this._pool }
         );
-        this._nextTickCallBacks = [];
 
         this.$forceUpdate();
     }
@@ -63,19 +62,6 @@ export default class Iota {
         this._updating = true;
         this._patch();
         this._updating = false;
-        this._nextTickHandler();
-    }
-
-    $nextTick (fn) {
-        this._nextTickCallBacks.push(fn);
-    }
-
-    _nextTickHandler () {
-        let length = this._nextTickCallBacks.length;
-        for (let i = 0; i < length; i++) {
-            this._nextTickCallBacks[i]();
-        }
-        this._nextTickCallBacks.splice(0, length);
     }
 
     $get (path) {
