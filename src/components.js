@@ -2,9 +2,14 @@
 
 import parse from './vdom/parse';
 import Iota from './iota';
+import proxy from './proxy';
 
 export const templates = {};
 export const instances = {};
+
+export function isComponent (el) {
+    return !!templates[el.tagName.toLowerCase()];
+}
 
 /**
  * uid is used to track the mount point in the vdom
@@ -64,6 +69,8 @@ export class ComponentTemplate {
         const [vdom, pool] = parse(this.options.el);
         this.options.vdom = vdom;
         this.options.pool = pool;
+
+        proxy(this, this.options);
     }
 
     _collectTemplate () {

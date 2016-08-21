@@ -1,4 +1,3 @@
-/* globals Text */
 import { $get, $set } from './util';
 import proxy from './proxy';
 import observe from './observe';
@@ -27,6 +26,12 @@ export default class Iota {
         }
         proxy(this, this.$methods);
 
+        this.$props = {};
+        if (options.props) {
+            options.props.forEach(k => { this.$props[k] = {}; });
+        }
+        proxy(this, this.$props);
+
         const [vdom, pool] = parse(this.$el);
 
         this._vdom = options.vdom ? options.vdom : vdom;
@@ -35,12 +40,18 @@ export default class Iota {
         this._patch = exposeScope(
             `__patch(this, $pool, $el, ${serialize(this._vdom)})`,
             this,
-            this.$data, this.$methods,
+            this.$data, this.$props, this.$methods,
             { __patch: patch, $el: this.$el, $pool: this._pool }
         );
         this._nextTickCallBacks = [];
 
         this.$forceUpdate();
+    }
+
+    __setProps (props) {
+        Object.keys(props).forEach(k => {
+            this.$props[k] = props[k];
+        });
     }
 
     $update () {

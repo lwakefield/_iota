@@ -2,16 +2,9 @@ import { templates } from '../components';
 
 const toArray = v => [].slice.call(v);
 
-export function collectComponent (el) {
+export function collectProps (el) {
     const tagName = el.tagName.toLowerCase();
     const template = templates[tagName];
-
-    let inst = {
-        isComponent: true,
-        isMounted: false,
-        tagName,
-        events: []
-    };
 
     let props = [];
     toArray(el.attributes).forEach(attr => {
@@ -19,16 +12,15 @@ export function collectComponent (el) {
 
         let name = attr.name.replace(/^:/, '');
         if (template.props && template.props.includes(name)) {
+            el.removeAttribute(attr.name);
             props.push([name, attr.value]);
         }
     });
-    const propsStr = '{' +
-        props.map(v => v.join(': ')).join(', ') +
-        '}';
+    const propsStr = props.length
+        ? '{' + props.map(v => v.join(': ')).join(', ') + '}'
+        : 'undefined';
 
     // eslint-disable-next-line
-    inst.props = new Function(`return ${propsStr};`);
-
-    return inst;
+    return new Function(`return ${propsStr};`);
 }
 

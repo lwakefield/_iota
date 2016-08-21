@@ -19,7 +19,7 @@ function buildFunctionalVdom (vdom) {
     return res;
 }
 
-export function newNode(name, attrs, events) {
+export function newNode (name, attrs, events) {
     let node = document.createElement(name);
     Object.keys(attrs).forEach(k => {
         node.setAttribute(k, attrs[k]);

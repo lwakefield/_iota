@@ -8,24 +8,27 @@
     <body>
         <div id="app">
             <h1>{{ title }}</h1>
-            <counter></counter>
-            <counter></counter>
-            <counter></counter>
-            <counter></counter>
-            <counter></counter>
+            <button @click="increment()">Master +1</button>
+            <p>Master: {{ counter }}</p>
+            <counter :master="counter"></counter>
+            <counter :master="counter"></counter>
+            <counter :master="counter"></counter>
+            <counter :master="counter"></counter>
+            <counter :master="counter"></counter>
 
         </div>
 
         <template id="counter">
             <section>
                 <button @click="increment()">+1</button>
-                <p>{{ counter }}</p>
+                <p>Master: {{ master }}, Local: {{ counter }}</p>
             </section>
         </template>
 
         <script src="../dist/iota.js"></script>
         <script>
             Iota.registerComponent('counter', {
+                props: ['master'],
                 data () {
                     return { counter: 0 };
                 },
@@ -38,10 +41,16 @@
             });
 
             var app = new Iota({
-                data: {
-                    title: 'hello world'
-                },
                 el: document.querySelector('#app'),
+                data: {
+                    title: 'hello world',
+                    counter: 0
+                },
+                methods: {
+                    increment () {
+                        this.counter++;
+                    }
+                }
             });
         </script>
     </body>

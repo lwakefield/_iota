@@ -1,6 +1,6 @@
 import serialize from '../serialize';
-import { templates, ComponentPool } from '../components';
-import { collectComponent } from './component';
+import { isComponent, ComponentPool } from '../components';
+import { collectProps } from './component';
 
 const toArray = v => [].slice.call(v);
 const getDir = (el, dir) => toArray(el.attributes)
@@ -24,26 +24,24 @@ export default function parse (el) {
                 : text.trim();
         }
 
-        let tagName = el.tagName.toLowerCase();
-
-        if (templates[tagName]) {
-            const comp = collectComponent(el);
-            pool.register(comp);
-            return comp;
-        }
-
         let vdom = {
             tagName: el.tagName.toLowerCase(),
             attrs: {},
-            events: [],
-            children: []
+            events: []
         };
-        const allChildren = el.childNodes.length
-            ? toArray(el.childNodes).map(v => _parse(v))
-            : [];
-        vdom.children = allChildren
-            .filter(v => !!v)
-            .filter(v => !v.tagName || v.tagName.toLowerCase() !== 'template');
+
+        if (isComponent(el)) {
+            vdom.isComponent = true;
+            vdom.props = collectProps(el);
+            pool.register(vdom);
+        } else {
+            const allChildren = el.childNodes.length
+                ? toArray(el.childNodes).map(v => _parse(v))
+                : [];
+            vdom.children = allChildren
+                .filter(v => !!v)
+                .filter(v => !v.tagName || v.tagName.toLowerCase() !== 'template');
+        }
 
         toArray(el.attributes).forEach(v => {
             parseAttr(vdom, v);

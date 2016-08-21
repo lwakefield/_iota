@@ -1,6 +1,5 @@
-import {
-    collectChildren
-} from './util';
+/* globals Text */
+import { collectChildren } from './util';
 import {
     isFormEl,
     removeNode,
@@ -8,7 +7,6 @@ import {
     newTextNode,
     replaceNode
 } from '../dom/util';
-import { components } from '../components';
 
 /**
  * The patch function walks the dom, diffing with the vdom along the way.
@@ -17,14 +15,14 @@ import { components } from '../components';
  * We need to pass in scope to make sure that any event listeners we attach
  *   will have the correct scope.
  */
-export default function patch(scope, pool, rootDom, rootVdom) {
+export default function patch (scope, pool, rootDom, rootVdom) {
     function _patch (dom, vdom) {
         if (typeof vdom === 'string') return patchText(dom, vdom);
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
-        if (vdom.isComponent) return patchComponent(dom, vdom);
-
-        dom = patchNode(dom, vdom);
+        dom = vdom.isComponent
+            ? patchComponent(dom, vdom)
+            : patchNode(dom, vdom);
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom);
 
@@ -36,16 +34,20 @@ export default function patch(scope, pool, rootDom, rootVdom) {
     _patch(rootDom, rootVdom);
 
     function patchComponent (dom, vdom) {
-        if (pool.get(vdom.uid)) {
-            // parse in props
-        } else {
-            const instance = pool.instantiate(vdom.uid);
+        let instance = pool.get(vdom.uid);
+        if (!instance) {
+            instance = pool.instantiate(vdom.uid);
             replaceNode(dom, instance.$el);
-            return instance.$el;
         }
+        const props = vdom.props();
+        if (props) {
+            instance.__setProps(props);
+            instance.$update();
+        }
+        return instance.$el;
     }
 
-    function patchText(dom, vdom) {
+    function patchText (dom, vdom) {
         if (!(dom instanceof Text)) {
             let textNode = newTextNode(vdom);
             replaceNode(dom, textNode);
@@ -56,7 +58,7 @@ export default function patch(scope, pool, rootDom, rootVdom) {
         }
     }
 
-    function patchNode(dom, vdom) {
+    function patchNode (dom, vdom) {
         if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
             // TODO: Sloppy naming, fix this up
             let n = newNode(vdom.tagName);
@@ -67,7 +69,7 @@ export default function patch(scope, pool, rootDom, rootVdom) {
     }
 
     // Update existing attrs and remove any attrs that are no longer needed
-    function patchAttrs(dom, vnode) {
+    function patchAttrs (dom, vnode) {
         let nextAttrs = vnode.attrs;
         let currAttrs = gatherAttrs(dom);
 
@@ -95,7 +97,7 @@ export default function patch(scope, pool, rootDom, rootVdom) {
         function remove () {
             for (let key in currAttrs) {
                 if (!nextAttrs[key]) {
-                    dom.removeAttribute(name);
+                    dom.removeAttribute(key);
                 }
             }
         }
@@ -106,13 +108,13 @@ export default function patch(scope, pool, rootDom, rootVdom) {
 
     // We just reattach all event listeners to make sure that all listeners
     //   are attached to the correct dom element
-    function patchEvents(dom, vdom) {
+    function patchEvents (dom, vdom) {
         removeEvents(dom);
         if (!vdom.events.length) return;
         addEvents(dom, vdom.events);
     }
 
-    function removeEvents(dom) {
+    function removeEvents (dom) {
         if (dom.__eventListeners) {
             for (let i = 0; i < dom.__eventListeners.length; i++) {
                 let v = dom.__eventListeners[i];
@@ -122,8 +124,8 @@ export default function patch(scope, pool, rootDom, rootVdom) {
         }
     }
 
-    function addEvents(dom, events) {
-        let listeners = []
+    function addEvents (dom, events) {
+        let listeners = [];
         for (let i = 0; i < events.length; i++) {
             let v = events[i];
             v.listener = v.listener.bind(scope);
@@ -133,7 +135,7 @@ export default function patch(scope, pool, rootDom, rootVdom) {
         dom.__eventListeners = listeners;
     }
 
-    function patchChildren(dom, nextChildren) {
+    function patchChildren (dom, nextChildren) {
         let len = nextChildren.length;
         let currNode = dom.firstChild;
         for (let i = 0; i < len; i++) {
@@ -153,7 +155,7 @@ export default function patch(scope, pool, rootDom, rootVdom) {
         }
     }
 
-    function patchChild(parent, node, vnode) {
+    function patchChild (parent, node, vnode) {
         if (node) {
             return _patch(node, vnode);
         } else if (typeof vnode === 'string' || typeof vnode === 'number') {
@@ -166,7 +168,6 @@ export default function patch(scope, pool, rootDom, rootVdom) {
             return _patch(child, vnode);
         }
     }
-
 }
 
 function gatherAttrs (dom) {
