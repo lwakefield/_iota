@@ -376,6 +376,18 @@ Now that our component groups are keyed, we have access to some cheap cases:
 - If a component is no longer rendered and needed at a later point in time, then
     we don't need to re-instantiate it.
 
+# Generalizing
+
+From this point, we can make some generalizations. Our ComponentPool only
+contains Components, but they exist in different formats:
+
+- Instance for regular components
+- Un-keyed are arrays
+- Keyed are Objects (dicts)
+
+We can pretty easily generalize this so all components exist in the pool as
+dictionaries.
+
 <!--
 React, or more specifically JSX has inline HTML embedded in JavaScript. It
 cannot be interpreted by the Browser (or Node.js). Instead it is pre-processed
