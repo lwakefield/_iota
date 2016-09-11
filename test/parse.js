@@ -177,8 +177,32 @@ describe('parse', () => {
         const myComp = vdom.children[1];
         expect(myComp.tagName).to.eql('my-component');
         expect(myComp.isComponent).to.eql(true);
-        expect(pool.instances['my-component']).to.not.be.undefined;
+        expect(myComp.uid).to.eql('my-component.0');
+        expect(myComp.props).to.be.instanceof(Function);
+        expect(pool.instances).to.eql({
+            'my-component': [
+                {length: 0}
+            ]
+        });
     });
+
+    // it('parses component with i-for', () => {
+    //     document.body.innerHTML = `
+    //         <template id="my-component">
+    //             <section>
+    //                 <button @click="increment()">+1</button>
+    //                 <p>{{ counter }}</p>
+    //             </section>
+    //         </template>
+
+    //         <my-component i-for="i in counters"></my-component>
+    //     `;
+    //     templates['my-component'] = new ComponentTemplate('my-component', {
+    //         data () { return { counter: 0 }; },
+    //         el: '#my-component',
+    //         methods: { increment () { this.counter++; } }
+    //     });
+    // });
 });
 
 function compare (a, b) {
