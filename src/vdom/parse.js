@@ -2,10 +2,6 @@ import serialize from '../serialize';
 import { isComponent, ComponentPool } from '../components';
 import { collectProps } from './component';
 
-const toArray = v => [].slice.call(v);
-const getDir = (el, dir) => toArray(el.attributes)
-    .find(v => v.name.match(dir));
-
 /**
  * This function recursively parses the DOM into a vdom
  * The vdom is made up of Objects and Functions
@@ -24,8 +20,10 @@ export default function parse (el) {
                 : text.trim();
         }
 
+        const tagName = el.tagName.toLowerCase();
+
         let vdom = {
-            tagName: el.tagName.toLowerCase(),
+            tagName,
             attrs: {},
             events: []
         };
@@ -33,36 +31,48 @@ export default function parse (el) {
         if (isComponent(el)) {
             vdom.isComponent = true;
             vdom.props = collectProps(el);
-            pool.register(vdom);
+            vdom.uid = pool.register(tagName);
         } else {
             const allChildren = el.childNodes.length
-                ? toArray(el.childNodes).map(v => _parse(v))
+                ? Array.from(el.childNodes).map(v => _parse(v))
                 : [];
             vdom.children = allChildren
                 .filter(v => !!v)
                 .filter(v => !v.tagName || v.tagName.toLowerCase() !== 'template');
         }
 
-        toArray(el.attributes).forEach(v => {
-            parseAttr(vdom, v);
+        // First round parse of attributes into the vdom
+        // Handles static and interpolated attributes
+        Array.from(el.attributes).forEach(v => {
+            vdom.attrs[v.name] = parseAttr(v);
         });
-        Object.keys(directives).forEach(key => {
-            let attr = getDir(el, key);
+
+        // Second round parsing of attributes
+        // Handles 'directives'
+        directiveNames.forEach(key => {
+            const attr = getAttr(el, key);
             if (!attr) return;
+
+            // Remove the attr from the node and the vdom
+            // The el should never render
             el.removeAttribute(attr.name);
             delete vdom.attrs[attr.name];
 
-            let apply = directives[key];
+            const apply = directives[key];
             vdom = apply(attr, vdom);
         });
+
         return vdom;
     }
 
     return [_parse(el), pool];
 }
 
-function parseAttr (vdom, attr) {
-    vdom.attrs[attr.name] = needsInterpolation(attr.value)
+const getAttr = (el, dir) => Array.from(el.attributes)
+    .find(v => v.name.match(dir));
+
+function parseAttr (attr) {
+    return needsInterpolation(attr.value)
         ? interpolate(attr.value)
         : attr.value;
 }
@@ -129,3 +139,4 @@ const directives = {
         `);
     }
 };
+const directiveNames = Object.keys(directives);
