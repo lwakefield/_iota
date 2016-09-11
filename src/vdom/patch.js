@@ -1,7 +1,6 @@
 /* globals Text */
 import { collectChildren } from './util';
 import {
-    isFormEl,
     removeNode,
     newNode,
     newTextNode,
@@ -11,6 +10,7 @@ import {
     propsChanged,
     ComponentGroup
 } from './util';
+import patchAttrs from '../patch/attrs';
 
 /**
  * The patch function walks the dom, diffing with the vdom along the way.
@@ -73,44 +73,6 @@ export default function patch (scope, pool, rootDom, rootVdom) {
             return n;
         }
         return dom;
-    }
-
-    // Update existing attrs and remove any attrs that are no longer needed
-    function patchAttrs (dom, vnode) {
-        let nextAttrs = vnode.attrs;
-        let currAttrs = gatherAttrs(dom);
-
-        // Make modifications on any existing attrs
-        // Add if they don't exist
-        // Update if the nextVal differs
-        function addAndUpdate () {
-            for (let key in nextAttrs) {
-                let nextVal = nextAttrs[key];
-                let currVal = currAttrs[key];
-                if (nextVal instanceof Function) {
-                    nextVal = nextVal();
-                }
-                if (key === 'value' && isFormEl(dom)) {
-                    dom.value = nextVal;
-                } else if (nextVal !== currVal) {
-                    dom.__attrs[key] = nextVal;
-                    dom.setAttribute(key, nextVal);
-                }
-            }
-        }
-
-        // If there are some attrs on node that don't exist in nextAttrs,
-        //   then we need to remove them
-        function remove () {
-            for (let key in currAttrs) {
-                if (!nextAttrs[key]) {
-                    dom.removeAttribute(key);
-                }
-            }
-        }
-
-        remove();
-        addAndUpdate();
     }
 
     // We just reattach all event listeners to make sure that all listeners
@@ -228,15 +190,4 @@ export default function patch (scope, pool, rootDom, rootVdom) {
     }
 }
 
-function gatherAttrs (dom) {
-    if (dom.__attrs) return dom.__attrs;
-
-    dom.__attrs = {};
-    let length = dom.attributes.length;
-    for (let i = 0; i < length; i++) {
-        let attr = dom.attributes[i];
-        dom.__attrs[attr.name] = attr.value;
-    }
-    return dom.__attrs;
-}
 
