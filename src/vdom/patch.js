@@ -7,6 +7,10 @@ import {
     newTextNode,
     replaceNode
 } from '../dom/util';
+import {
+    propsChanged,
+    ComponentGroup
+} from './util';
 
 /**
  * The patch function walks the dom, diffing with the vdom along the way.
@@ -17,6 +21,7 @@ import {
  */
 export default function patch (scope, pool, rootDom, rootVdom) {
     function _patch (dom, vdom) {
+        // These are the root cases, where we just return a TextNode
         if (typeof vdom === 'string') return patchText(dom, vdom);
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
@@ -34,25 +39,15 @@ export default function patch (scope, pool, rootDom, rootVdom) {
     _patch(rootDom, rootVdom);
 
     function patchComponent (dom, vdom) {
-        let instance = pool.get(vdom.uid);
+        let instance = pool.get(vdom.uid, vdom.key);
         if (!instance) {
             instance = pool.instantiate(vdom.uid);
             replaceNode(dom, instance.$el);
         }
+
         const newProps = vdom.props();
         const oldProps = instance.$props;
-        // TODO: cache props
-        let keys = Object.keys(newProps);
-        let len = keys.length;
-        let needsUpdate = false;
-        for (let i = 0; i < len; i++) {
-            let key = keys[i];
-            if (oldProps[key] !== newProps[key]) {
-                needsUpdate = true;
-                continue;
-            }
-        }
-        if (newProps && needsUpdate) {
+        if (propsChanged(newProps, oldProps)) {
             instance.__setProps(newProps);
             instance.$update();
         }
@@ -122,7 +117,7 @@ export default function patch (scope, pool, rootDom, rootVdom) {
     //   are attached to the correct dom element
     function patchEvents (dom, vdom) {
         removeEvents(dom);
-        if (!vdom.events.length) return;
+        if (!vdom.events || !vdom.events.length) return;
         addEvents(dom, vdom.events);
     }
 
@@ -148,15 +143,63 @@ export default function patch (scope, pool, rootDom, rootVdom) {
     }
 
     function patchChildren (dom, nextChildren) {
-        let len = nextChildren.length;
+        let children = collectComponentGroups(nextChildren);
+        let len = children.length;
         let currNode = dom.firstChild;
         for (let i = 0; i < len; i++) {
-            let nextNode = nextChildren[i];
-            currNode = patchChild(dom, currNode, nextNode);
-            if (currNode) currNode = currNode.nextSibling;
+            let nextNode = children[i];
+            if (nextNode instanceof ComponentGroup) {
+                const group = nextNode;
+                for (let j = 0; j < group.length; j++) {
+                    nextNode = group[j];
+                    nextNode.key = j;
+                    currNode = patchChild(dom, currNode, nextNode);
+                    if (currNode) currNode = currNode.nextSibling;
+                }
+            } else {
+                currNode = patchChild(dom, currNode, nextNode);
+                if (currNode) currNode = currNode.nextSibling;
+            }
         }
 
         cleanChildren(currNode);
+    }
+
+    /**
+     * At this point, our vdom will have been fully compiled and all our nodes
+     *   will be objects.
+     * Out of all these nodes, some will be components.
+     * Adjacent components with the same uid, will be part of the same group.
+     * This function collects these components into a ComponentGroup.
+     */
+    function collectComponentGroups (children) {
+        const bothAreComponents = (a, b) => a.isComponent && b.isComponent;
+        const bothHaveSameMountPoint = (a, b) => a.uid === b.uid;
+
+        let result = [];
+        let i = 0;
+        while (i < children.length) {
+            let thisChild = children[i];
+            let nextChild = children[i + 1];
+
+            if (bothAreComponents(thisChild, nextChild) &&
+                bothHaveSameMountPoint(thisChild, nextChild)) {
+                const group = new ComponentGroup();
+                group.push(thisChild, nextChild);
+                const uid = thisChild.uid;
+                for (let j = i + 2; j < children.length; j++) {
+                    const child = children[j];
+                    if (child.uid !== uid) break;
+                    group.push(child);
+                }
+                result.push(group);
+                i += group.length;
+            } else {
+                result.push(thisChild);
+                i++;
+            }
+        }
+        return result;
     }
 
     function cleanChildren (child) {
@@ -169,6 +212,9 @@ export default function patch (scope, pool, rootDom, rootVdom) {
 
     function patchChild (parent, node, vnode) {
         if (node) {
+            if (vnode.isComponent) {
+                console.log(node, vnode);
+            }
             return _patch(node, vnode);
         } else if (typeof vnode === 'string' || typeof vnode === 'number') {
             let child = newTextNode(vnode);

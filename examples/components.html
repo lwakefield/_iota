@@ -7,14 +7,10 @@
     </head>
     <body>
         <div id="app">
-            <h1>{{ title }}</h1>
             <button @click="increment()">Master +1</button>
-            <p>Master: {{ counter }}</p>
-            <counter :master="counter"></counter>
-            <counter :master="counter"></counter>
-            <counter :master="counter"></counter>
-            <counter :master="counter"></counter>
-            <counter :master="counter"></counter>
+            <p>Master: {{ counters.join(',') }}</p>
+
+            <counter i-for="m of counters" :master="m"></counter>
 
         </div>
 
@@ -43,12 +39,11 @@
             var app = new Iota({
                 el: document.querySelector('#app'),
                 data: {
-                    title: 'hello world',
-                    counter: 0
+                    counters: [0, 1, 2, 3, 4]
                 },
                 methods: {
                     increment () {
-                        this.counter++;
+                        this.counters = this.counters.map(v => ++v)
                     }
                 }
             });

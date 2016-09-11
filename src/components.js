@@ -27,32 +27,32 @@ export class ComponentPool {
     constructor () {
         this.instances = {};
     }
-    register (inst) {
-        if (!this.instances[inst.tagName]) {
-            this.instances[inst.tagName] = [null];
-            inst.uid = `${inst.tagName}.0`;
-            return;
+    register (tagName) {
+        if (!this.instances[tagName]) {
+            this.instances[tagName] = [];
         }
 
-        const len = this.instances[inst.tagName].length;
-        this.instances[inst.tagName].push(null);
-        inst.uid = `${inst.tagName}.${len}`;
+        const len = this.instances[tagName].length;
+        this.instances[tagName].push({length: 0});
+        return `${tagName}.${len}`;
     }
 
-    get (uid) {
+    get (uid, key = 0) {
         const [name, id] = uid.split('.');
-        return this.instances[name][id];
+        return this.instances[name][id][key];
     }
 
-    instantiate (uid) {
+    instantiate (uid, key = undefined) {
         const [name, id] = uid.split('.');
         const template = templates[name];
+        const inst = template.newInstance();
 
-        let data = template.options.data();
-        let el = template.options.el.cloneNode(true);
-        let options = Object.assign({}, template.options, { el, data });
-        const inst = new Iota(options);
-        this.instances[name][id] = inst;
+        if (!key) {
+            key = this.instances[name][id].length;
+        }
+
+        this.instances[name][id][key] = inst;
+        this.instances[name][id].length++;
         return inst;
     }
 }
@@ -93,5 +93,12 @@ export class ComponentTemplate {
         return Array.from(el.content.childNodes).filter(v => {
             return !(v instanceof Text) || !!v.nodeValue.trim();
         });
+    }
+
+    newInstance () {
+        const data = this.options.data();
+        const el = this.options.el.cloneNode(true);
+        const options = Object.assign({}, this.options, { el, data });
+        return new Iota(options);
     }
 }
