@@ -14,12 +14,22 @@ const nop = () => {};
  * obj.bar = 2;
  */
 export default function observe(obj, fn=nop) {
+    let p = new Proxy(obj, {
+        set (target, property, value) {
+            target[property] = typeof value === 'object'
+                ? observe(value)
+                : value;
+            notify(fn, value);
+            return true;
+        }
+    });
+
     for (let key of Object.keys(obj)) {
-        makeReactive(obj, key, notify.bind(null, fn));
-        if (obj[key] instanceof Object) {
-            observe(obj[key], fn);
+        if (typeof obj[key] === 'object') {
+            obj[key] = observe(obj[key], fn);
         }
     }
+    return p;
 }
 
 function notify (fn, val) {

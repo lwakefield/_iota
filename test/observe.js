@@ -35,7 +35,7 @@ describe('Observe', () => {
                 }
             }
         };
-        observe(data, () => {
+        data = observe(data, () => {
             done();
         });
         data.foo.bar.baz = 'world';
@@ -48,7 +48,7 @@ describe('Observe', () => {
             }
         };
         let set = 0;
-        observe(data, () => set++);
+        data = observe(data, () => set++);
 
         data.foo = { bar: 'world' };
         expect(set).to.be.eql(1);

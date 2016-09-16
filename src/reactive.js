@@ -1,3 +1,8 @@
+function _makeReactive (obj, handler) {
+    let getter = handler.get;
+    let setter = handler.set;
+    return new Proxy(obj, handler)
+}
 export default function makeReactive (obj, key, fn=() => {}) {
     const prop = Object.getOwnPropertyDescriptor(obj, key);
     let val = obj[key];

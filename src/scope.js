@@ -19,23 +19,16 @@
  */
 export default function exposeScope (code, scope = null, ...toExpose) {
     if (code instanceof Function) {
-        code = `return (${code.toString()}).bind(this)()`;
+        code = `(${code.toString()}).call(this)`;
     }
-    let params = [].concat(toExpose.map(v => Object.keys(v)))
-        .filter(v => v.length)
-        .join(',');
 
-    let aliases = toExpose.map((v, k) => `__alias${k}`);
-    let aliasRefs = [].concat(toExpose.map((v, k) => {
-        return Object.keys(v).map(v1 => `__alias${k}.${v1}`);
-    }))
-        .filter(v => v.length)
-        .join(',');
+    const aliases = toExpose.map((v, k) => `__alias${k}`);
+    const withs = aliases.map(v => `with (${v})`).join(' ');
 
     // eslint-disable-next-line
-    return new Function(...aliases, `
-        return (function (${params}) {
-            ${code}
-        }).bind(this)(${aliasRefs});
-    `).bind(scope, ...toExpose);
+    return new Function(...aliases,
+        `${withs} {
+            return (() => {'use strict'; return ${code} })
+        }`)
+    .call(scope, ...toExpose);
 }
