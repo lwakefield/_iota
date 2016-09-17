@@ -106,7 +106,7 @@ const directives = {
     'i-model' (attr, vdom) {
         // i-model is really sugar for:
         //   <input
-        //      @change="$set('message', $e.target.value)"
+        //      @change="this.field = e.target.value"
         //      :value="message">
         const field = attr.value;
         vdom.events.push({

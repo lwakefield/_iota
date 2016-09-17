@@ -1,4 +1,3 @@
-import { $get, $set } from './util';
 import proxy from './proxy';
 import observe from './observe';
 import exposeScope from './scope';
@@ -17,7 +16,7 @@ export default class Iota {
             this.$data = options.data;
         }
         this._updating = false;
-        observe(this.$data, this.$update.bind(this));
+        this.$data = observe(this.$data, this.$update.bind(this));
         proxy(this, this.$data);
 
         this.$methods = {};
@@ -62,14 +61,6 @@ export default class Iota {
         this._updating = true;
         this._patch();
         this._updating = false;
-    }
-
-    $get (path) {
-        return $get(this.$data, path);
-    }
-
-    $set (path, val) {
-        $set(this.$data, path, val);
     }
 
     static registerComponent (name, options) {

@@ -15,11 +15,11 @@ const nop = () => {};
  */
 export default function observe(obj, fn=nop) {
     let p = new Proxy(obj, {
-        set (target, property, value) {
-            target[property] = typeof value === 'object'
-                ? observe(value)
-                : value;
-            notify(fn, value);
+        set (target, property, val) {
+            target[property] = val instanceof Array || val instanceof Object
+                ? observe(val, fn)
+                : val;
+            notify(fn, val);
             return true;
         }
     });
