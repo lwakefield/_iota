@@ -3,7 +3,7 @@ import {
     expect
 } from 'chai';
 import serialize from '../src/serialize';
-import parse from '../src/vdom/parse';
+import parse from '../src/parse';
 import { ComponentTemplate, templates } from '../src/components';
 
 describe('parse', () => {

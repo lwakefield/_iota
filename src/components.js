@@ -1,6 +1,6 @@
 /* globals Text */
 
-import parse from './vdom/parse';
+import parse from './parse';
 import Iota from './iota';
 import proxy from './proxy';
 

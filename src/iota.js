@@ -4,7 +4,7 @@ import exposeScope from './scope';
 import serialize from './serialize';
 import { templates, ComponentTemplate } from './components';
 
-import parse from './vdom/parse';
+import parse from './parse';
 import patch from './vdom/patch';
 
 export default class Iota {

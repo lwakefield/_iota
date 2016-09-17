@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import serialize from '../src/serialize';
-import parse from '../src/vdom/parse';
+import parse from '../src/parse';
 import expand from '../src/vdom/expand';
 import h from '../src/h';
 
