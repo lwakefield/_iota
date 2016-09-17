@@ -2,7 +2,14 @@ import serialize from '../serialize';
 import { isComponent, ComponentPool } from '../components';
 import { collectProps } from './component';
 
-import { directives, directiveNames } from './directives'
+import { directives, directiveNames } from './directives';
+
+import {
+    getAttr,
+    parseAttr,
+    needsInterpolation,
+    interpolate
+} from './util';
 
 /**
  * This function recursively parses the DOM into a vdom
@@ -70,29 +77,3 @@ export default function parse (el) {
     return [_parse(el), pool];
 }
 
-const getAttr = (el, dir) => Array.from(el.attributes)
-    .find(v => v.name.match(dir));
-
-function parseAttr (attr) {
-    return needsInterpolation(attr.value)
-        ? interpolate(attr.value)
-        : attr.value;
-}
-
-function needsInterpolation (text) {
-    return text.match(/{{(.*?)}}/g);
-}
-
-function interpolate (text) {
-    const interpolation = text.split(/({{.*?}})/)
-        .filter(v => v.trim().length)
-        .map(v => {
-            if (v.match(/{{(.*?)}}/g)) {
-                return v.replace(/{{\s*(.*?)\s*}}/g, '$1');
-            }
-            return `"${v}"`;
-        })
-        .join(' + ');
-    // eslint-disable-next-line
-    return new Function(`return ${interpolation};`);
-}

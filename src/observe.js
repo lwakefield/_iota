@@ -1,5 +1,3 @@
-import makeReactive from './reactive';
-
 const nop = () => {};
 
 /**

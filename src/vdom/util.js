@@ -19,14 +19,6 @@ function buildFunctionalVdom (vdom) {
     return res;
 }
 
-export function newNode (name, attrs, events) {
-    let node = document.createElement(name);
-    Object.keys(attrs).forEach(k => {
-        node.setAttribute(k, attrs[k]);
-    });
-    return node;
-}
-
 /**
   * If the prop doesn't exist in oldProps or the value differs
   *    then there has been a change.
