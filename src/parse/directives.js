@@ -1,4 +1,4 @@
-import serialize from '../serialize'
+import serialize from 'serialize'
 
 export const directives = {
     '^@.+' (attr, vdom) {

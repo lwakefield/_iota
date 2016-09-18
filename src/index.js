@@ -1,3 +1,3 @@
-import Iota from './iota';
+import Iota from 'iota';
 
 module.exports = Iota;

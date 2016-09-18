@@ -1,11 +1,10 @@
-import proxy from './proxy';
-import observe from './observe';
-import exposeScope from './scope';
-import serialize from './serialize';
-import { templates, ComponentTemplate } from './components';
-
-import parse from './parse';
-import patch from './vdom/patch';
+import proxy from 'proxy';
+import observe from 'observe';
+import exposeScope from 'scope';
+import serialize from 'serialize';
+import { templates, ComponentTemplate } from 'components';
+import parse from 'parse';
+import patch from 'patch';
 
 export default class Iota {
 

@@ -1,4 +1,4 @@
-import { templates } from '../components';
+import { templates } from 'components';
 
 const toArray = v => [].slice.call(v);
 

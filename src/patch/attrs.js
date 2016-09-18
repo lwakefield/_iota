@@ -1,4 +1,4 @@
-import {isFormEl} from '../dom/util';
+import {isFormEl} from 'dom/util';
 
 // Update existing attrs and remove any attrs that are no longer needed
 export default function patchAttrs (dom, vnode) {

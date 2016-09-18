@@ -1,11 +1,10 @@
 /* globals Text */
 
-import parse from './parse';
-import Iota from './iota';
-import proxy from './proxy';
+import parse from 'parse';
+import Iota from 'iota';
+import proxy from 'proxy';
 
 export const templates = {};
-export const instances = {};
 
 export function isComponent (el) {
     return !!templates[el.tagName.toLowerCase()];

@@ -1,17 +1,17 @@
 /* globals Text */
-import { collectChildren } from './util';
 import {
     removeNode,
     newNode,
     newTextNode,
     replaceNode
-} from '../dom/util';
+} from 'dom/util';
 import {
     propsChanged,
-    ComponentGroup
-} from './util';
-import patchAttrs from '../patch/attrs';
-import patchEvents from '../patch/events';
+    ComponentGroup,
+    collectChildren
+} from 'vdom/util';
+import patchAttrs from 'patch/attrs';
+import patchEvents from 'patch/events';
 
 /**
  * The patch function walks the dom, diffing with the vdom along the way.

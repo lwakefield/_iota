@@ -1,15 +1,13 @@
-import serialize from '../serialize';
-import { isComponent, ComponentPool } from '../components';
-import { collectProps } from './component';
+import { isComponent, ComponentPool } from 'components';
 
-import { directives, directiveNames } from './directives';
-
+import { collectProps } from 'parse/component';
+import { directives, directiveNames } from 'parse/directives';
 import {
     getAttr,
     parseAttr,
     needsInterpolation,
     interpolate
-} from './util';
+} from 'parse/util';
 
 /**
  * This function recursively parses the DOM into a vdom
