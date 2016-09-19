@@ -2,7 +2,6 @@
 
 import parse from 'parse';
 import Iota from 'iota';
-import proxy from 'proxy';
 
 export const templates = {};
 
@@ -56,6 +55,10 @@ export class ComponentPool {
     }
 }
 
+export function registerComponent (name, options) {
+    templates[name] = new ComponentTemplate(name, options);
+}
+
 export class ComponentTemplate {
     constructor (name, options) {
         this.name = name;
@@ -68,8 +71,6 @@ export class ComponentTemplate {
         const [vdom, pool] = parse(this.options.el);
         this.options.vdom = vdom;
         this.options.pool = pool;
-
-        proxy(this, this.options);
     }
 
     _collectTemplate () {

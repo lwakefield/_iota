@@ -2,7 +2,7 @@ import proxy from 'proxy';
 import observe from 'observe';
 import exposeScope from 'scope';
 import serialize from 'serialize';
-import { templates, ComponentTemplate } from 'components';
+import { registerComponent as _registerComponent } from 'components';
 import parse from 'parse';
 import patch from 'patch';
 
@@ -63,7 +63,7 @@ export default class Iota {
     }
 
     static registerComponent (name, options) {
-        templates[name] = new ComponentTemplate(name, options);
+        _registerComponent(name, options);
     }
 
 }
