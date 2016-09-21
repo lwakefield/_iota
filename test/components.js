@@ -10,6 +10,14 @@ import {
 
 global['Text'] = window.Text;
 
+function injectBasicComponent () {
+    document.body.innerHTML = `
+        <template id="my-component">
+            <h1>{{ msg }}</h1>
+        </template>
+    `;
+}
+
 describe('isComponent', () => {
     const el = document.createElement('my-component');
     it('returns false correctly', () => {
@@ -22,32 +30,109 @@ describe('isComponent', () => {
 });
 
 describe('registerComponent', () => {
+    beforeEach(injectBasicComponent);
     it('correctly registers components', () => {
-        // registerComponent('my-component', {});
-        // console.log(templates);
+        const el = '#my-component';
+        const data = () => ({msg: 'hello world'});
+        registerComponent('my-component', {el, data});
+        expect(templates['my-component']).is.not.undefined;
     });
 });
 
-describe.only('ComponentTemplate', () => {
-    document.body.innerHTML = `
-        <template id="my-component">
-            <h1>{{ msg }}</h1>
-        </template>
-    `;
-    it('instantiates with an el', () => {
-        const el = document.querySelector('#my-component');
-        const template = new ComponentTemplate('my-component', {el});
-        expect(template).to.not.be.undefined;
-        expect(template.name).to.eql('my-component');
-        expect(template.options.el).to.not.be.undefined;
-        expect(template.options.vdom).to.not.be.undefined;
-        expect(template.options.pool).to.not.be.undefined;
+describe('ComponentTemplate', () => {
+    beforeEach(injectBasicComponent);
+
+    describe('instantiation', () => {
+        it('instantiates with an el', () => {
+            const el = document.querySelector('#my-component');
+            const template = new ComponentTemplate('my-component', {el});
+            expect(template).to.not.be.undefined;
+            expect(template.name).to.eql('my-component');
+            expect(template.options.el).is.not.undefined;
+            expect(template.options.vdom).is.not.undefined;
+            expect(template.options.pool).is.not.undefined;
+        });
+        it('instantiates with an selector', () => {
+            const el = '#my-component';
+            const template = new ComponentTemplate('my-component', {el});
+            expect(template).is.not.undefined;
+            expect(template.name).to.eql('my-component');
+            expect(template.options.el).is.not.undefined;
+            expect(template.options.vdom).is.not.undefined;
+            expect(template.options.pool).is.not.undefined;
+        });
+    });
+    it('creates a new instance', () => {
+        const el = '#my-component';
+        const options = {
+            el,
+            data () {
+                return {msg: 'hello world'};
+            }
+        };
+        const template = new ComponentTemplate('my-component', options);
+        const instance = template.newInstance();
+        expect(instance).is.not.undefined;
     });
 });
 
 describe('ComponentPool', () => {
-    const pool = new ComponentPool();
+    let pool;
+    beforeEach(() => {
+        pool = new ComponentPool();
+        injectBasicComponent();
+    });
+
     it('registers components', () => {
-        expect(pool.register('my-component')).to.eql('my-component.0');
+        const uid = pool.register('my-component')
+        const [name, id] = uid.split('.');
+        expect(uid).to.eql('my-component.0');
+        expect(pool.instances[name][id]).to.eql({length: 0});
+    });
+
+    it('instantiates a component without a key', () => {
+        const uid = pool.register('my-component');
+        const [name, id] = uid.split('.');
+        const inst = pool.instantiate(uid);
+        expect(inst).is.not.undefined;
+        const group = pool.instances[name][id];
+        expect(group.length).to.eql(1);
+        expect(group[0]).is.not.undefined;
+    });
+    it('instantiates two components without keys', () => {
+        const uid = pool.register('my-component');
+        const [name, id] = uid.split('.');
+
+        const inst1 = pool.instantiate(uid);
+        const inst2 = pool.instantiate(uid);
+        expect(inst1).is.not.undefined;
+        expect(inst2).is.not.undefined;
+
+        const group = pool.instances[name][id];
+        expect(group.length).to.eql(2);
+        expect(group[0]).is.not.undefined;
+        expect(group[1]).is.not.undefined;
+    });
+    it('instantiates a component with a key', () => {
+        const uid = pool.register('my-component');
+        const [name, id] = uid.split('.');
+        const inst = pool.instantiate(uid, 'foo');
+        expect(inst).is.not.undefined;
+        const group = pool.instances[name][id];
+        expect(group.length).to.eql(1);
+        expect(group['foo']).is.not.undefined;
+    });
+    it('instantiates two components with a key', () => {
+        const uid = pool.register('my-component');
+        const [name, id] = uid.split('.');
+        const inst1 = pool.instantiate(uid, 'foo');
+        const inst2 = pool.instantiate(uid, 'bar');
+        expect(inst1).is.not.undefined;
+        expect(inst2).is.not.undefined;
+
+        const group = pool.instances[name][id];
+        expect(group.length).to.eql(2);
+        expect(group['foo']).is.not.undefined;
+        expect(group['bar']).is.not.undefined;
     });
 });

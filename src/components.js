@@ -96,7 +96,9 @@ export class ComponentTemplate {
     }
 
     newInstance () {
-        const data = this.options.data();
+        const data = typeof this.options.data === 'function'
+            ? this.options.data()
+            : {};
         const el = this.options.el.cloneNode(true);
         const options = Object.assign({}, this.options, { el, data });
         return new Iota(options);
