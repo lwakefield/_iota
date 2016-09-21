@@ -1,11 +1,6 @@
 extends: standard
 rules:
-    indent:
-        - error
-        - 4
-    arrow-parens:
-        - error
-        - as-needed
-    semi:
-        - error
-        - always
+    #2 is error
+    indent: [2, 4]
+    arrow-parens: [2, 'as-needed']
+    semi: [2, 'never']
