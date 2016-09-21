@@ -1,4 +1,4 @@
-<h1 align="center">ιota</h1>
+<h1 align="center">ιota <img src="https://circleci.com/gh/lwakefield/iota.png?circle-token=6b15855738e2ea84a71901e60d7062e233a893f4"></h1>
 
 <p align="center"><strong>ιota</strong> is a <i>super</i> small, <i>super</i> fast JavaScript framework.</p>
 <p align="center">It is <i>truly</i> reactive, none of this <code>setState()</code> nonsense.</p>
