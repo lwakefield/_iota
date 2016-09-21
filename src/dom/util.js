@@ -1,4 +1,4 @@
-const formEls = [
+export const formEls = [
     'button',
     'datalist',
     'fieldset',
@@ -14,14 +14,15 @@ const formEls = [
     'progress',
     'select',
     'textarea'
-].join('|')
-export function isFormEl(node) {
-    return node.tagName.toLowerCase().match(formEls);
+].join('|');
+
+export function isFormEl (node) {
+    return node.tagName.toLowerCase().match(formEls) !== null;
 }
 
 // We pool nodes for later use.
 // This is WAAAY faster than calling document.createElement
-const nodes = {};
+export const nodes = {};
 
 export function removeNode(node) {
     node.remove();
