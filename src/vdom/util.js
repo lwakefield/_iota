@@ -11,7 +11,7 @@ export function collectChildren (vdom) {
     return children;
 }
 
-function buildFunctionalVdom (vdom) {
+export function buildFunctionalVdom (vdom) {
     let res = vdom;
     while (res instanceof Function) {
         res = res();
@@ -47,6 +47,11 @@ export function propsChanged (newProps, oldProps) {
     return false;
 }
 
+/**
+ * Really this is just an array... But I wanted something that I could easily
+ * identify with instanceof and also helps avoid confusion when working with
+ * arrays in proximity to ComponentGroup, it is very clear what is what.
+ */
 export class ComponentGroup {
     constructor () {
         this.length = 0;

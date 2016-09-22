@@ -78,7 +78,7 @@ describe('replaceNode', () => {
         replaceNode(document.querySelector('h1'), el);
         expect(document.querySelector('h1')).is.null;
         expect(document.querySelector('h2')).is.not.null;
-    });
-});
+    })
+})
 
 
