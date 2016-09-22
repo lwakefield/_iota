@@ -31,7 +31,8 @@ describe('gatherAttrs', () => {
 
 describe('patchAttrs', () => {
     it('patches an empty el', () => {
-        const el = document.body
+        document.body.innerHTML = '<p></p>'
+        const el = document.querySelector('p')
         const vdom = {
             attrs: {
                 id: 'foo',
