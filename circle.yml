@@ -2,5 +2,7 @@ machine:
   node:
     version: 6.3.1
 test:
-  override: npm run cover
-  post: bash <(curl -s https://codecov.io/bash)
+  override:
+    - npm run cover
+  post:
+    - bash <(curl -s https://codecov.io/bash)
