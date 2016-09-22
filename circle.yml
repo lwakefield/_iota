@@ -5,4 +5,4 @@ test:
   override:
     - npm run cover
   post:
-    - bash <(curl -s https://codecov.io/bash) -f coverage/coverage.raw.json
+    - bash <(curl -s https://codecov.io/bash)
