@@ -56,7 +56,9 @@ export class ComponentPool {
 }
 
 export function registerComponent (name, options) {
-    templates[name] = new ComponentTemplate(name, options);
+    const template = new ComponentTemplate(name, options)
+    templates[name] = template
+    return template
 }
 
 export class ComponentTemplate {

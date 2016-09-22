@@ -3,15 +3,15 @@ import {
     removeNode,
     newNode,
     newTextNode,
-    replaceNode
-} from 'dom/util';
+    replaceNode,
+} from 'dom/util'
 import {
     propsChanged,
     ComponentGroup,
-    collectChildren
-} from 'vdom/util';
-import patchAttrs from 'patch/attrs';
-import patchEvents from 'patch/events';
+    collectChildren,
+} from 'vdom/util'
+import patchAttrs from 'patch/attrs'
+import patchEvents from 'patch/events'
 
 /**
  * The patch function walks the dom, diffing with the vdom along the way.
@@ -27,7 +27,7 @@ export default function patch (scope, pool, rootDom, rootVdom) {
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
         dom = vdom.isComponent
-            ? patchComponent(dom, vdom)
+            ? patchComponent({pool, dom, vdom})
             : patchNode(dom, vdom);
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom, scope);
@@ -38,43 +38,6 @@ export default function patch (scope, pool, rootDom, rootVdom) {
         return dom;
     }
     _patch(rootDom, rootVdom);
-
-    function patchComponent (dom, vdom) {
-        let instance = pool.get(vdom.uid, vdom.key);
-        if (!instance) {
-            instance = pool.instantiate(vdom.uid);
-            replaceNode(dom, instance.$el);
-        }
-
-        const newProps = vdom.props();
-        const oldProps = instance.$props;
-        if (propsChanged(newProps, oldProps)) {
-            instance.__setProps(newProps);
-            instance.$update();
-        }
-        return instance.$el;
-    }
-
-    function patchText (dom, vdom) {
-        if (!(dom instanceof Text)) {
-            let textNode = newTextNode(vdom);
-            replaceNode(dom, textNode);
-            return textNode;
-        } else if (dom.nodeValue !== vdom) {
-            dom.nodeValue = vdom;
-            return dom;
-        }
-    }
-
-    function patchNode (dom, vdom) {
-        if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
-            // TODO: Sloppy naming, fix this up
-            let n = newNode(vdom.tagName);
-            replaceNode(dom, n);
-            return n;
-        }
-        return dom;
-    }
 
     function patchChildren (dom, nextChildren) {
         let children = collectComponentGroups(nextChildren);
@@ -99,56 +62,8 @@ export default function patch (scope, pool, rootDom, rootVdom) {
         cleanChildren(currNode);
     }
 
-    /**
-     * At this point, our vdom will have been fully compiled and all our nodes
-     *   will be objects.
-     * Out of all these nodes, some will be components.
-     * Adjacent components with the same uid, will be part of the same group.
-     * This function collects these components into a ComponentGroup.
-     */
-    function collectComponentGroups (children) {
-        const bothAreComponents = (a, b) => a.isComponent && b.isComponent;
-        const bothHaveSameMountPoint = (a, b) => a.uid === b.uid;
-
-        let result = [];
-        let i = 0;
-        while (i < children.length) {
-            let thisChild = children[i];
-            let nextChild = children[i + 1];
-
-            if (bothAreComponents(thisChild, nextChild) &&
-                bothHaveSameMountPoint(thisChild, nextChild)) {
-                const group = new ComponentGroup();
-                group.push(thisChild, nextChild);
-                const uid = thisChild.uid;
-                for (let j = i + 2; j < children.length; j++) {
-                    const child = children[j];
-                    if (child.uid !== uid) break;
-                    group.push(child);
-                }
-                result.push(group);
-                i += group.length;
-            } else {
-                result.push(thisChild);
-                i++;
-            }
-        }
-        return result;
-    }
-
-    function cleanChildren (child) {
-        while (child) {
-            let nextChild = child.nextSibling;
-            removeNode(child);
-            child = nextChild;
-        }
-    }
-
     function patchChild (parent, node, vnode) {
         if (node) {
-            if (vnode.isComponent) {
-                console.log(node, vnode);
-            }
             return _patch(node, vnode);
         } else if (typeof vnode === 'string' || typeof vnode === 'number') {
             let child = newTextNode(vnode);
@@ -159,6 +74,89 @@ export default function patch (scope, pool, rootDom, rootVdom) {
             parent.appendChild(child);
             return _patch(child, vnode);
         }
+    }
+}
+
+export function patchComponent ({pool, dom, vdom}) {
+    let instance = pool.get(vdom.uid, vdom.key);
+    if (!instance) {
+        instance = pool.instantiate(vdom.uid);
+        replaceNode(dom, instance.$el);
+    }
+
+    const newProps = vdom.props();
+    const oldProps = instance.$props;
+    if (propsChanged(newProps, oldProps)) {
+        instance.__setProps(newProps);
+        instance.$update();
+    }
+    return instance.$el;
+}
+
+export function patchText (dom, vdom) {
+    if (!(dom instanceof Text)) {
+        let textNode = newTextNode(vdom);
+        replaceNode(dom, textNode);
+        return textNode;
+    } else if (dom.nodeValue !== vdom) {
+        dom.nodeValue = vdom;
+        return dom;
+    }
+}
+
+export function patchNode (dom, vdom) {
+    if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
+        // TODO: Sloppy naming, fix this up
+        let n = newNode(vdom.tagName);
+        replaceNode(dom, n);
+        return n;
+    }
+    return dom;
+}
+
+
+/**
+    * At this point, our vdom will have been fully compiled and all our nodes
+    *   will be objects.
+    * Out of all these nodes, some will be components.
+    * Adjacent components with the same uid, will be part of the same group.
+    * This function collects these components into a ComponentGroup.
+    */
+export function collectComponentGroups (children) {
+    const bothAreComponents = (a, b) => a.isComponent && b.isComponent;
+    const bothHaveSameMountPoint = (a, b) => a.uid === b.uid;
+
+    let result = [];
+    let i = 0;
+    while (i < children.length) {
+        let thisChild = children[i];
+        let nextChild = children[i + 1];
+
+        if (bothAreComponents(thisChild, nextChild) &&
+            bothHaveSameMountPoint(thisChild, nextChild)) {
+            const group = new ComponentGroup();
+            group.push(thisChild, nextChild);
+            const uid = thisChild.uid;
+            for (let j = i + 2; j < children.length; j++) {
+                const child = children[j];
+                if (child.uid !== uid) break;
+                group.push(child);
+            }
+            result.push(group);
+            i += group.length;
+        } else {
+            result.push(thisChild);
+            i++;
+        }
+    }
+    return result;
+}
+
+export function cleanChildren (child) {
+    while (child) {
+        let nextChild = child.nextSibling;
+        removeNode(child);
+        child = nextChild;
     }
 }
 
