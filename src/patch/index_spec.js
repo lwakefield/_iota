@@ -6,6 +6,7 @@ import {
     patchText,
     patchNode,
     collectComponentGroups,
+    cleanChildren,
 } from './index'
 import {
     ComponentPool,
@@ -211,5 +212,24 @@ describe('collectComponentGroups', () => {
         ]
         const grouped = collectComponentGroups(children)
         expect(grouped.length).to.eql(2)
+    })
+})
+
+describe('cleanChildren', () => {
+    it('removes all children after', () => {
+        document.body.innerHTML = `
+            <p></p>
+            <p></p>
+            <p></p>
+            <p class="start"></p>
+            <p></p>
+            <p></p>
+        `
+        cleanChildren(document.querySelector('.start'))
+        const html = document.body.innerHTML
+            .split('\n')
+            .map(v => v.trim())
+            .join('')
+        expect(html).to.eql('<p></p><p></p><p></p>')
     })
 })

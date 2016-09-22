@@ -156,6 +156,10 @@ export function collectComponentGroups (children) {
     return result;
 }
 
+/**
+ * Including the child given as a param, cleanChildren will remove all siblings
+ * following the child param
+ */
 export function cleanChildren (child) {
     while (child) {
         let nextChild = child.nextSibling;
