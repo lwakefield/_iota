@@ -30,6 +30,7 @@ export default function patchAttrs (dom, vnode) {
         for (let key in currAttrs) {
             if (!nextAttrs[key]) {
                 dom.removeAttribute(key);
+                delete dom.__attrs[key]
             }
         }
     }
@@ -38,14 +39,14 @@ export default function patchAttrs (dom, vnode) {
     addAndUpdate();
 }
 
-function gatherAttrs (dom) {
-    if (dom.__attrs) return dom.__attrs;
+export function gatherAttrs (dom) {
+    if (dom.__attrs) return dom.__attrs
 
-    dom.__attrs = {};
-    let length = dom.attributes.length;
+    dom.__attrs = {}
+    let length = dom.attributes.length
     for (let i = 0; i < length; i++) {
-        let attr = dom.attributes[i];
-        dom.__attrs[attr.name] = attr.value;
+        let attr = dom.attributes[i]
+        dom.__attrs[attr.name] = attr.value
     }
-    return dom.__attrs;
+    return dom.__attrs
 }
