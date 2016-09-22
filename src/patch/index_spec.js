@@ -4,6 +4,7 @@ import { expect } from 'chai'
 import {
     patchComponent,
     patchText,
+    patchNode,
 } from './index'
 import {
     ComponentPool,
@@ -138,5 +139,19 @@ describe('patchText', () => {
         const text = 'bar'
         const patchedEl = patchText(el, text)
         expect(patchedEl.nodeValue).to.eql(text)
+    })
+})
+
+describe('patchNode', () => {
+    it('replaces a node when needed', () => {
+        const el = document.createElement('div')
+        const patchedEl = patchNode(el, {tagName: 'p'})
+        expect(patchedEl).to.not.eql(el)
+        expect(patchedEl.tagName).to.eql('P')
+    })
+    it('does replaces a node when not needed', () => {
+        const el = document.createElement('div')
+        const patchedEl = patchNode(el, {tagName: 'div'})
+        expect(patchedEl).to.eql(el)
     })
 })

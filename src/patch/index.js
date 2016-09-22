@@ -104,6 +104,9 @@ export function patchText (dom, vdom) {
     }
 }
 
+/**
+ * TODO: rename this, all it does is replace a node if needed
+ */
 export function patchNode (dom, vdom) {
     if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
         // TODO: Sloppy naming, fix this up
