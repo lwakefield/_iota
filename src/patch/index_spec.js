@@ -175,6 +175,22 @@ describe('collectComponentGroups', () => {
         expect(group[0]).to.eql(children[0])
         expect(group[1]).to.eql(children[1])
     })
+    it('collects four components with the same mount point', () => {
+        const children = [
+            {isComponent: true, uid: 'foo.0'},
+            {isComponent: true, uid: 'foo.0'},
+            {isComponent: true, uid: 'foo.0'},
+            {isComponent: true, uid: 'foo.0'},
+        ]
+        const grouped = collectComponentGroups(children)
+        expect(grouped.length).to.eql(1)
+        const group = grouped[0]
+        expect(group.length).to.eql(4)
+        expect(group[0]).to.eql(children[0])
+        expect(group[1]).to.eql(children[1])
+        expect(group[2]).to.eql(children[2])
+        expect(group[3]).to.eql(children[3])
+    })
     it('does not collect two components with different mount points', () => {
         const children = [
             {isComponent: true, uid: 'foo.0'},
