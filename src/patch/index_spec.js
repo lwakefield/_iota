@@ -63,4 +63,64 @@ describe('patchComponent', () => {
             expect(pool.instances[name][key].length).to.eql(1)
         })
     })
+
+    describe('simple components with props', () => {
+        function setup () {
+            document.body.innerHTML = `
+                <template id="foo">
+                    <p>{{ foo }}</p>
+                    <p>{{ bar }}</p>
+                </template>
+            `
+            const template = registerComponent('foo', {
+                el: '#foo',
+                props: ['foo', 'bar']
+            })
+            const pool = new ComponentPool()
+            const uid = pool.register('foo')
+            const dom = document.createElement('foo')
+            const vdom = {
+                tagName: 'foo',
+                attrs: {},
+                events: [],
+                isComponent: true,
+                props: () => ({}),
+                uid,
+            }
+            return {
+                template,
+                pool,
+                uid,
+                dom,
+                vdom,
+            }
+        }
+
+        it('successfully patches for the first time', () => {
+            const {pool, dom, vdom} = setup()
+            vdom.props = () => ({foo: 'message one', bar: 'message two'})
+
+            const patchedEl = patchComponent({pool, dom, vdom})
+            expect(patchedEl.outerHTML).to.eql(`
+                <div>
+                    <p>message one</p>
+                    <p>message two</p>
+                </div>
+            `.split('\n').map(v => v.trim()).join(''))
+        })
+
+        it('successfully patches with updated props', () => {
+            const {pool, dom, vdom} = setup()
+            vdom.props = () => ({foo: 'message one', bar: 'message two'})
+            const patchedEl = patchComponent({pool, dom, vdom})
+            vdom.props = () => ({foo: 'message three', bar: 'message four'})
+            const patchedAgainEl = patchComponent({pool, dom: patchedEl, vdom})
+            expect(patchedAgainEl.outerHTML).to.eql(`
+                <div>
+                    <p>message three</p>
+                    <p>message four</p>
+                </div>
+            `.split('\n').map(v => v.trim()).join(''))
+        })
+    })
 })
