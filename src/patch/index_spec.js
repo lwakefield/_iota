@@ -5,6 +5,7 @@ import {
     patchComponent,
     patchText,
     patchNode,
+    collectComponentGroups,
 } from './index'
 import {
     ComponentPool,
@@ -153,5 +154,33 @@ describe('patchNode', () => {
         const el = document.createElement('div')
         const patchedEl = patchNode(el, {tagName: 'div'})
         expect(patchedEl).to.eql(el)
+    })
+})
+
+describe('collectComponentGroups', () => {
+    it('does not collect a single comopnent', () => {
+        const children = [{isComponent: true, uid: 'foo.0'}]
+        const grouped = collectComponentGroups(children)
+        expect(grouped).to.eql(children)
+    })
+    it('collects two components with the same mount point', () => {
+        const children = [
+            {isComponent: true, uid: 'foo.0'},
+            {isComponent: true, uid: 'foo.0'},
+        ]
+        const grouped = collectComponentGroups(children)
+        expect(grouped.length).to.eql(1)
+        const group = grouped[0]
+        expect(group.length).to.eql(2)
+        expect(group[0]).to.eql(children[0])
+        expect(group[1]).to.eql(children[1])
+    })
+    it('does not collect two components with different mount points', () => {
+        const children = [
+            {isComponent: true, uid: 'foo.0'},
+            {isComponent: true, uid: 'foo.1'},
+        ]
+        const grouped = collectComponentGroups(children)
+        expect(grouped).to.eql(children)
     })
 })

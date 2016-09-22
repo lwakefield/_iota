@@ -110,13 +110,12 @@ export function patchText (dom, vdom) {
 export function patchNode (dom, vdom) {
     if (!dom.tagName || dom.tagName.toLowerCase() !== vdom.tagName) {
         // TODO: Sloppy naming, fix this up
-        let n = newNode(vdom.tagName);
-        replaceNode(dom, n);
-        return n;
+        let n = newNode(vdom.tagName)
+        replaceNode(dom, n)
+        return n
     }
-    return dom;
+    return dom
 }
-
 
 /**
     * At this point, our vdom will have been fully compiled and all our nodes
@@ -135,7 +134,9 @@ export function collectComponentGroups (children) {
         let thisChild = children[i];
         let nextChild = children[i + 1];
 
-        if (bothAreComponents(thisChild, nextChild) &&
+        if (thisChild &&
+            nextChild &&
+            bothAreComponents(thisChild, nextChild) &&
             bothHaveSameMountPoint(thisChild, nextChild)) {
             const group = new ComponentGroup();
             group.push(thisChild, nextChild);
