@@ -3,12 +3,12 @@ import { expect } from 'chai'
 
 import {
     patchComponent,
+    patchText,
 } from './index'
 import {
     ComponentPool,
     registerComponent,
 } from 'components'
-import parse from 'parse'
 
 global['Text'] = window.Text
 
@@ -122,5 +122,21 @@ describe('patchComponent', () => {
                 </div>
             `.split('\n').map(v => v.trim()).join(''))
         })
+    })
+})
+
+describe('patchText', () => {
+    it('patches a textnode', () => {
+        const el = document.createTextNode('foo')
+        const text = 'bar'
+        const patchedEl = patchText(el, text)
+        expect(el.nodeValue).to.eql(text)
+        expect(patchedEl.nodeValue).to.eql(text)
+    })
+    it('patches a non textnode', () => {
+        const el = document.createElement('div')
+        const text = 'bar'
+        const patchedEl = patchText(el, text)
+        expect(patchedEl.nodeValue).to.eql(text)
     })
 })

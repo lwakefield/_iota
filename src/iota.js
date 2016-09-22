@@ -57,9 +57,9 @@ export default class Iota {
     }
 
     $forceUpdate () {
-        this._updating = true;
-        this._patch();
-        this._updating = false;
+        this._updating = true
+        this._patch()
+        this._updating = false
     }
 
     static registerComponent (name, options) {
