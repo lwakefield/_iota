@@ -12,6 +12,9 @@ import {
     ComponentPool,
     registerComponent,
 } from 'components'
+import {
+    ComponentGroup
+} from 'vdom/util'
 
 global['Text'] = window.Text
 
@@ -159,10 +162,19 @@ describe('patchNode', () => {
 })
 
 describe('collectComponentGroups', () => {
-    it('does not collect a single comopnent', () => {
+    function makeGroup (els) {
+        const group = new ComponentGroup()
+        for (let el of els) {
+            group.push(el)
+        }
+        return group
+    }
+
+    it('does collect a single component', () => {
         const children = [{isComponent: true, uid: 'foo.0'}]
         const grouped = collectComponentGroups(children)
-        expect(grouped).to.eql(children)
+        const expected = [makeGroup(children)]
+        expect(grouped).to.eql(expected)
     })
     it('collects two components with the same mount point', () => {
         const children = [
@@ -171,10 +183,9 @@ describe('collectComponentGroups', () => {
         ]
         const grouped = collectComponentGroups(children)
         expect(grouped.length).to.eql(1)
-        const group = grouped[0]
-        expect(group.length).to.eql(2)
-        expect(group[0]).to.eql(children[0])
-        expect(group[1]).to.eql(children[1])
+        const expected = [ makeGroup(children) ]
+        expect(grouped).to.eql(expected)
+        expect(grouped[0].length).to.eql(2)
     })
     it('collects lots of components with the same mount point', () => {
         const children = [
@@ -188,12 +199,8 @@ describe('collectComponentGroups', () => {
         ]
         const grouped = collectComponentGroups(children)
         expect(grouped.length).to.eql(1)
-        const group = grouped[0]
-        expect(group.length).to.eql(children.length)
-        const len = children.length
-        for (let i = 0; i < len; i++) {
-            expect(group[i]).to.eql(children[i])
-        }
+        const expected = [ makeGroup(children) ]
+        expect(grouped).to.eql(expected)
     })
     it('does not collect two components with different mount points', () => {
         const children = [
@@ -201,17 +208,25 @@ describe('collectComponentGroups', () => {
             {isComponent: true, uid: 'foo.1'},
         ]
         const grouped = collectComponentGroups(children)
-        expect(grouped).to.eql(children)
+        const expected = [
+            makeGroup([children[0]]),
+            makeGroup([children[1]]),
+        ]
+        expect(grouped).to.eql(expected)
     })
     it('terminates when group when mount point changes', () => {
         const children = [
             {isComponent: true, uid: 'foo.0'},
             {isComponent: true, uid: 'foo.0'},
             {isComponent: true, uid: 'foo.0'},
-            {},
+            {isComponent: true, uid: 'foo.1'},
         ]
         const grouped = collectComponentGroups(children)
-        expect(grouped.length).to.eql(2)
+        const expected = [
+            makeGroup([children[0], children[1], children[2]]),
+            makeGroup([children[3]]),
+        ]
+        expect(grouped).to.eql(expected)
     })
 })
 

@@ -44,27 +44,24 @@ export default function patch (scope, pool, rootDom, rootVdom) {
      * the parents children with the array of vdom children.
      */
     function patchChildren (dom, nextChildren) {
-        let children = collectComponentGroups(nextChildren);
-        let len = children.length;
-        let currNode = dom.firstChild;
+        let children = collectComponentGroups(nextChildren)
+        let len = children.length
+        let currNode = dom.firstChild
         for (let i = 0; i < len; i++) {
-            let nextNode = children[i];
-            if (nextNode instanceof ComponentGroup) {
-                const group = nextNode;
-                const len = group.length
-                for (let j = 0; j < len; j++) {
-                    nextNode = group[j];
-                    nextNode.key = j;
-                    currNode = patchChild(dom, currNode, nextNode);
-                    if (currNode) currNode = currNode.nextSibling;
+            const group = children[i]
+            const glen = group.length
+            for (let j = 0; j < glen; j++) {
+                let vnode = group[j]
+                if (vnode.isComponent) {
+                    vnode.key = j
                 }
-            } else {
-                currNode = patchChild(dom, currNode, nextNode);
-                if (currNode) currNode = currNode.nextSibling;
+                currNode = patchChild(dom, currNode, vnode)
+
+                if (currNode) currNode = currNode.nextSibling
             }
         }
 
-        cleanChildren(currNode);
+        cleanChildren(currNode)
     }
 
     function patchChild (parent, node, vnode) {
@@ -131,17 +128,17 @@ export function patchNode (dom, vdom) {
     */
 export function collectComponentGroups (children) {
     let result = []
-    let i = 0
     let currGroup = new ComponentGroup()
-    while (i < children.length) {
-        let thisChild = children[i]
+    const len = children.length
+    for (let i = 0; i < len; i++) {
+        let child = children[i]
 
-        if (currGroup.shouldHold(thisChild)) {
-            currGroup.push(thisChild)
+        if (currGroup.shouldHold(child)) {
+            currGroup.push(child)
         } else {
             result.push(currGroup)
             currGroup = new ComponentGroup()
-            currGroup.push(thisChild)
+            currGroup.push(child)
         }
     }
     if (currGroup.length !== 0) {

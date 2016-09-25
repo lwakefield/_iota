@@ -54,14 +54,11 @@ export function propsChanged (newProps, oldProps) {
  */
 export class ComponentGroup {
     constructor () {
-        this.length = 0;
+        this.length = 0
     }
-    push (...vals) {
-        const len = vals.length;
-        for (let i = 0; i < len; i++) {
-            this[this.length + i] = vals[i];
-        }
-        this.length += len;
+    push (val) {
+        this[this.length] = val
+        this.length++
     }
     get tail () {
         return this[this.length - 1]

@@ -101,10 +101,11 @@ describe('ComponentGroup', () => {
         })
         it('correctly pushes multiple els', () => {
             const group = new ComponentGroup()
-            group.push({foo: 1}, {bar: 2})
+            group.push({foo: 1})
+            group.push({foo: 2})
             expect(group.length).to.eql(2)
             expect(group[0]).to.eql({foo: 1})
-            expect(group[1]).to.eql({bar: 2})
+            expect(group[1]).to.eql({foo: 2})
         })
     })
 })
