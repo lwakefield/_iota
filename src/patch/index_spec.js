@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 
-import {
+import patch, {
     patchComponent,
     patchText,
     patchNode,
@@ -15,6 +15,7 @@ import {
 import {
     ComponentGroup
 } from 'vdom/util'
+import parse from 'parse'
 
 global['Text'] = window.Text
 
@@ -246,5 +247,61 @@ describe('cleanChildren', () => {
             .map(v => v.trim())
             .join('')
         expect(html).to.eql('<p></p><p></p><p></p>')
+    })
+})
+
+describe('patch', () => {
+    /**
+     * Hackily get the vdom by setting innerHTML then resetting it once we are
+     * done.
+     */
+    function getVdom (html) {
+        const before = document.body.innerHTML
+        document.body.innerHTML = html
+        const [vdom] = parse(document.body)
+        document.body.innerHTML = before
+        return vdom.children[0]
+    }
+
+    function expectHTML (el, html) {
+        const normalize = str => str
+        .split('\n')
+        .filter(v => !!v)
+        .map(v => v.trim())
+        .join('')
+
+        expect(normalize(el.outerHTML)).to.eql(normalize(html))
+    }
+
+    describe('simple vdom tree with no components', () => {
+        const html = `
+            <div id="my-app">
+                <h1>Hello world</h1>
+                <ul class="foo bar">
+                    <li>one</li>
+                    <li>two</li>
+                    <li>three</li>
+                </ul>
+            </div>
+        `
+        const vdom = getVdom(html)
+
+        it('successfully patches a matching root el', () => {
+            document.body.innerHTML = '<div></div>'
+            const el = document.querySelector('div')
+            const patchedEl = patch(null, null, el, vdom)
+
+            expect(patchedEl).to.eql(el)
+            expectHTML(patchedEl, html)
+        })
+
+        it('successfully patches a non matching root el', () => {
+            document.body.innerHTML = '<p></p>'
+            const el = document.querySelector('p')
+            const patchedEl = patch(null, null, el, vdom)
+
+            expect(patchedEl).to.not.eql(el)
+            expectHTML(patchedEl, html)
+        })
     })
 })

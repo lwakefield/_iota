@@ -37,7 +37,7 @@ export default function patch (scope, pool, rootDom, rootVdom) {
         patchChildren(dom, collectChildren(vdom));
         return dom;
     }
-    _patch(rootDom, rootVdom);
+    return _patch(rootDom, rootVdom);
 
     /**
      * Given a parent node and an array of child components, we diff and patch
