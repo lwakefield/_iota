@@ -39,6 +39,10 @@ export default function patch (scope, pool, rootDom, rootVdom) {
     }
     _patch(rootDom, rootVdom);
 
+    /**
+     * Given a parent node and an array of child components, we diff and patch
+     * the parents children with the array of vdom children.
+     */
     function patchChildren (dom, nextChildren) {
         let children = collectComponentGroups(nextChildren);
         let len = children.length;
@@ -47,7 +51,8 @@ export default function patch (scope, pool, rootDom, rootVdom) {
             let nextNode = children[i];
             if (nextNode instanceof ComponentGroup) {
                 const group = nextNode;
-                for (let j = 0; j < group.length; j++) {
+                const len = group.length
+                for (let j = 0; j < len; j++) {
                     nextNode = group[j];
                     nextNode.key = j;
                     currNode = patchChild(dom, currNode, nextNode);
@@ -125,35 +130,24 @@ export function patchNode (dom, vdom) {
     * This function collects these components into a ComponentGroup.
     */
 export function collectComponentGroups (children) {
-    const bothAreComponents = (a, b) => a.isComponent && b.isComponent;
-    const bothHaveSameMountPoint = (a, b) => a.uid === b.uid;
-
-    let result = [];
-    let i = 0;
+    let result = []
+    let i = 0
+    let currGroup = new ComponentGroup()
     while (i < children.length) {
-        let thisChild = children[i];
-        let nextChild = children[i + 1];
+        let thisChild = children[i]
 
-        if (thisChild &&
-            nextChild &&
-            bothAreComponents(thisChild, nextChild) &&
-            bothHaveSameMountPoint(thisChild, nextChild)) {
-            const group = new ComponentGroup();
-            group.push(thisChild, nextChild);
-            const uid = thisChild.uid;
-            for (let j = i + 2; j < children.length; j++) {
-                const child = children[j];
-                if (child.uid !== uid) break;
-                group.push(child);
-            }
-            result.push(group);
-            i += group.length;
+        if (currGroup.shouldHold(thisChild)) {
+            currGroup.push(thisChild)
         } else {
-            result.push(thisChild);
-            i++;
+            result.push(currGroup)
+            currGroup = new ComponentGroup()
+            currGroup.push(thisChild)
         }
     }
-    return result;
+    if (currGroup.length !== 0) {
+        result.push(currGroup)
+    }
+    return result
 }
 
 /**

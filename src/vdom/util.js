@@ -63,5 +63,32 @@ export class ComponentGroup {
         }
         this.length += len;
     }
+    get tail () {
+        return this[this.length - 1]
+    }
+    shouldHold (node) {
+        return this.length === 0 ||
+        node.uid === this.tail.uid
+    }
+    iterator () {
+        return new ComponentGroupIterator(this)
+    }
+}
+
+class ComponentGroupIterator {
+    constructor (group) {
+        this.group = group
+        this.index = 0
+    }
+    next () {
+        if (this.index >= this.group.length - 1) {
+            return null
+        }
+        this.index++
+        return this.group[this.index]
+    }
+    curr () {
+        return this.group[this.index]
+    }
 }
 
