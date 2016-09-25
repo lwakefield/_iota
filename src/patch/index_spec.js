@@ -52,7 +52,7 @@ describe('patchComponent', () => {
             const [name, key] = uid.split('.')
             expect(pool.instances[name]).to.eql([{length: 0}])
 
-            const patchedEl = patchComponent({pool, dom, vdom})
+            const patchedEl = patchComponent(pool, dom, vdom)
             expect(patchedEl.outerHTML).to.eql('<p>Hello world</p>')
             expect(pool.instances[name][key].length).to.eql(1)
         })
@@ -62,8 +62,8 @@ describe('patchComponent', () => {
             const [name, key] = uid.split('.')
             expect(pool.instances[name]).to.eql([{length: 0}])
 
-            const patchedEl = patchComponent({pool, dom, vdom})
-            const patchedAgainEl = patchComponent({pool, dom: patchedEl, vdom})
+            const patchedEl = patchComponent(pool, dom, vdom)
+            const patchedAgainEl = patchComponent(pool, patchedEl, vdom)
 
             expect(patchedAgainEl.outerHTML).to.eql('<p>Hello world</p>')
             expect(pool.instances[name][key].length).to.eql(1)
@@ -106,7 +106,7 @@ describe('patchComponent', () => {
             const {pool, dom, vdom} = setup()
             vdom.props = () => ({foo: 'message one', bar: 'message two'})
 
-            const patchedEl = patchComponent({pool, dom, vdom})
+            const patchedEl = patchComponent(pool, dom, vdom)
             expect(patchedEl.outerHTML).to.eql(`
                 <div>
                     <p>message one</p>
@@ -118,9 +118,9 @@ describe('patchComponent', () => {
         it('successfully patches with updated props', () => {
             const {pool, dom, vdom} = setup()
             vdom.props = () => ({foo: 'message one', bar: 'message two'})
-            const patchedEl = patchComponent({pool, dom, vdom})
+            const patchedEl = patchComponent(pool, dom, vdom)
             vdom.props = () => ({foo: 'message three', bar: 'message four'})
-            const patchedAgainEl = patchComponent({pool, dom: patchedEl, vdom})
+            const patchedAgainEl = patchComponent(pool, patchedEl, vdom)
             expect(patchedAgainEl.outerHTML).to.eql(`
                 <div>
                     <p>message three</p>

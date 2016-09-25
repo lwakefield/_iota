@@ -27,7 +27,7 @@ export default function patch (scope, pool, rootDom, rootVdom) {
         if (typeof vdom === 'number') return patchText(dom, vdom);
 
         dom = vdom.isComponent
-            ? patchComponent({pool, dom, vdom})
+            ? patchComponent(pool, dom, vdom)
             : patchNode(dom, vdom);
         patchAttrs(dom, vdom);
         patchEvents(dom, vdom, scope);
@@ -79,7 +79,7 @@ export default function patch (scope, pool, rootDom, rootVdom) {
     }
 }
 
-export function patchComponent ({pool, dom, vdom}) {
+export function patchComponent (pool, dom, vdom) {
     let instance = pool.get(vdom.uid, vdom.key);
     if (!instance) {
         instance = pool.instantiate(vdom.uid);
