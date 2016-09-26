@@ -6,7 +6,7 @@ import Iota from 'iota';
 export const templates = {};
 
 export function isComponent (el) {
-    return !!templates[el.tagName.toLowerCase()];
+    return el.tagName.toLowerCase() in templates
 }
 
 /**

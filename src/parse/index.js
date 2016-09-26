@@ -18,22 +18,22 @@ import {
  *   references properties that are not available in scope.
  */
 export default function parse (el) {
-    const pool = new ComponentPool();
+    const pool = new ComponentPool()
     function _parse (el) {
         if (el.splitText) {
-            let text = el.textContent;
+            let text = el.textContent
             return needsInterpolation(text)
                 ? interpolate(text)
-                : text.trim();
+                : text.trim()
         }
 
-        const tagName = el.tagName.toLowerCase();
+        const tagName = el.tagName.toLowerCase()
 
         let vdom = {
             tagName,
             attrs: {},
-            events: []
-        };
+            events: [],
+        }
 
         if (isComponent(el)) {
             vdom.isComponent = true;

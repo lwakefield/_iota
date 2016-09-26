@@ -29,10 +29,10 @@ export function buildFunctionalVdom (vdom) {
   */
 export function propsChanged (newProps, oldProps) {
     // TODO: cache props
-    let keys = Object.keys(newProps);
-    let len = keys.length;
+    let keys = newProps ? Object.keys(newProps) : []
+    let len = keys.length
     // Shortcut for checking if props have changed
-    if (!oldProps) return true;
+    if (!oldProps) return true
     if (len !== Object.keys(oldProps).length) return true;
 
     for (let i = 0; i < len; i++) {

@@ -23,21 +23,21 @@ import patchEvents from 'patch/events'
 export default function patch (scope, pool, rootDom, rootVdom) {
     function _patch (dom, vdom) {
         // These are the root cases, where we just return a TextNode
-        if (typeof vdom === 'string') return patchText(dom, vdom);
-        if (typeof vdom === 'number') return patchText(dom, vdom);
+        if (typeof vdom === 'string') return patchText(dom, vdom)
+        if (typeof vdom === 'number') return patchText(dom, vdom)
 
         dom = vdom.isComponent
             ? patchComponent(pool, dom, vdom)
-            : patchNode(dom, vdom);
-        patchAttrs(dom, vdom);
-        patchEvents(dom, vdom, scope);
+            : patchNode(dom, vdom)
+        patchAttrs(dom, vdom)
+        patchEvents(dom, vdom, scope)
 
-        if (!vdom.children) return dom;
+        if (!vdom.children) return dom
 
-        patchChildren(dom, collectChildren(vdom));
-        return dom;
+        patchChildren(dom, collectChildren(vdom))
+        return dom
     }
-    return _patch(rootDom, rootVdom);
+    return _patch(rootDom, rootVdom)
 
     /**
      * Given a parent node and an array of child components, we diff and patch
