@@ -400,7 +400,7 @@ describe('patch', () => {
             return {vdom, pool}
         }
 
-        it.only('successfully patches', () => {
+        it('successfully patches', () => {
             const {vdom, pool} = setup()
 
             document.body.innerHTML = '<div></div>'
