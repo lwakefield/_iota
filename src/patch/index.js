@@ -66,43 +66,43 @@ export default function patch (scope, pool, rootDom, rootVdom) {
 
     function patchChild (parent, node, vnode) {
         if (node) {
-            return _patch(node, vnode);
+            return _patch(node, vnode)
         } else if (typeof vnode === 'string' || typeof vnode === 'number') {
-            let child = newTextNode(vnode);
-            parent.appendChild(child);
-            return _patch(child, vnode);
+            let child = newTextNode(vnode)
+            parent.appendChild(child)
+            return _patch(child, vnode)
         } else {
-            let child = newNode(vnode.tagName);
-            parent.appendChild(child);
-            return _patch(child, vnode);
+            let child = newNode(vnode.tagName)
+            parent.appendChild(child)
+            return _patch(child, vnode)
         }
     }
 }
 
 export function patchComponent (pool, dom, vdom) {
-    let instance = pool.get(vdom.uid, vdom.key);
+    let instance = pool.get(vdom.uid, vdom.key)
     if (!instance) {
-        instance = pool.instantiate(vdom.uid);
-        replaceNode(dom, instance.$el);
+        instance = pool.instantiate(vdom.uid)
+        replaceNode(dom, instance.$el)
     }
 
-    const newProps = vdom.props();
-    const oldProps = instance.$props;
+    const newProps = vdom.props()
+    const oldProps = instance.$props
     if (propsChanged(newProps, oldProps)) {
-        instance.__setProps(newProps);
-        instance.$update();
+        instance.__setProps(newProps)
+        instance.$update()
     }
-    return instance.$el;
+    return instance.$el
 }
 
 export function patchText (dom, vdom) {
     if (!(dom instanceof Text)) {
-        let textNode = newTextNode(vdom);
-        replaceNode(dom, textNode);
-        return textNode;
+        let textNode = newTextNode(vdom)
+        replaceNode(dom, textNode)
+        return textNode
     } else if (dom.nodeValue !== vdom) {
-        dom.nodeValue = vdom;
-        return dom;
+        dom.nodeValue = vdom
+        return dom
     }
 }
 
@@ -153,9 +153,9 @@ export function collectComponentGroups (children) {
  */
 export function cleanChildren (child) {
     while (child) {
-        let nextChild = child.nextSibling;
-        removeNode(child);
-        child = nextChild;
+        let nextChild = child.nextSibling
+        removeNode(child)
+        child = nextChild
     }
 }
 

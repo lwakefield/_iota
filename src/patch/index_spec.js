@@ -19,6 +19,18 @@ import parse from 'parse'
 
 global['Text'] = window.Text
 
+/**
+ * When unit testing, we want to make the input and output as obvious as
+ * possible.
+ * We also want to abstract away everything that is not immediately relevant to
+ * the test. By abstracting away everything that is not immediately relevant, we
+ * make the test easier to read AND easier to write.
+ *
+ * Is it okay to rely on other parts of the system? For example, we are testing
+ * patching here. Is it okay to use `parse` in order to abstract away the
+ * generation of the vdom?
+ */
+
 describe('patchComponent', () => {
     describe('simple static components', () => {
         function setup () {
@@ -51,7 +63,8 @@ describe('patchComponent', () => {
         it('successfully patches for the first time', () => {
             const {pool, uid, dom, vdom} = setup()
             const [name, key] = uid.split('.')
-            expect(pool.instances[name]).to.eql([{length: 0}])
+            // This expectation belongs in the unit testing of the parser
+            // expect(pool.instances[name]).to.eql([{length: 0}])
 
             const patchedEl = patchComponent(pool, dom, vdom)
             expect(patchedEl.outerHTML).to.eql('<p>Hello world</p>')
@@ -61,7 +74,6 @@ describe('patchComponent', () => {
         it('successfully patches twice', () => {
             const {pool, uid, dom, vdom} = setup()
             const [name, key] = uid.split('.')
-            expect(pool.instances[name]).to.eql([{length: 0}])
 
             const patchedEl = patchComponent(pool, dom, vdom)
             const patchedAgainEl = patchComponent(pool, patchedEl, vdom)
@@ -81,7 +93,7 @@ describe('patchComponent', () => {
             `
             const template = registerComponent('foo', {
                 el: '#foo',
-                props: ['foo', 'bar']
+                props: ['foo', 'bar'],
             })
             const pool = new ComponentPool()
             const uid = pool.register('foo')
