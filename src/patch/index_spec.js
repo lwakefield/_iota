@@ -31,6 +31,11 @@ global['Text'] = window.Text
  * generation of the vdom?
  */
 
+function compareHTML (left, right) {
+    const normalize = v => v.split('\n').map(v => v.trim()).join('')
+    expect(normalize(left)).to.eql(normalize(right))
+}
+
 describe('patchComponent', () => {
     describe('simple static components', () => {
         function setup () {
@@ -38,26 +43,14 @@ describe('patchComponent', () => {
                 <template id="foo">
                     <p>Hello world</p>
                 </template>
+                <foo></foo>
             `
-            const template = registerComponent('foo', {el: '#foo'})
-            const pool = new ComponentPool()
-            const uid = pool.register('foo')
-            const dom = document.createElement('foo')
-            const vdom = {
-                tagName: 'foo',
-                attrs: {},
-                events: [],
-                isComponent: true,
-                props: () => ({}),
-                uid,
-            }
-            return {
-                template,
-                pool,
-                uid,
-                dom,
-                vdom,
-            }
+            registerComponent('foo', {el: '#foo'})
+            const el = document.querySelector('foo')
+            const [vdom, pool] = parse(el)
+            const uid = 'foo.0'
+            const dom = el
+            return { pool, uid, dom, vdom }
         }
 
         it('successfully patches for the first time', () => {
@@ -67,7 +60,7 @@ describe('patchComponent', () => {
             // expect(pool.instances[name]).to.eql([{length: 0}])
 
             const patchedEl = patchComponent(pool, dom, vdom)
-            expect(patchedEl.outerHTML).to.eql('<p>Hello world</p>')
+            compareHTML(patchedEl.outerHTML, '<p>Hello world</p>')
             expect(pool.instances[name][key].length).to.eql(1)
         })
 
@@ -78,7 +71,7 @@ describe('patchComponent', () => {
             const patchedEl = patchComponent(pool, dom, vdom)
             const patchedAgainEl = patchComponent(pool, patchedEl, vdom)
 
-            expect(patchedAgainEl.outerHTML).to.eql('<p>Hello world</p>')
+            compareHTML(patchedAgainEl.outerHTML, '<p>Hello world</p>')
             expect(pool.instances[name][key].length).to.eql(1)
         })
     })
@@ -90,56 +83,48 @@ describe('patchComponent', () => {
                     <p>{{ foo }}</p>
                     <p>{{ bar }}</p>
                 </template>
+                <foo :foo="" :bar=""></foo>
             `
-            const template = registerComponent('foo', {
+            registerComponent('foo', {
                 el: '#foo',
                 props: ['foo', 'bar'],
             })
-            const pool = new ComponentPool()
-            const uid = pool.register('foo')
-            const dom = document.createElement('foo')
-            const vdom = {
-                tagName: 'foo',
-                attrs: {},
-                events: [],
-                isComponent: true,
-                props: () => ({}),
-                uid,
-            }
-            return {
-                template,
-                pool,
-                uid,
-                dom,
-                vdom,
-            }
+            const el = document.querySelector('foo')
+            const [vdom, pool] = parse(el)
+            const uid = 'foo.0'
+            const dom = el
+            return { pool, uid, dom, vdom }
         }
 
         it('successfully patches for the first time', () => {
             const {pool, dom, vdom} = setup()
+            // We inject our mocked props
             vdom.props = () => ({foo: 'message one', bar: 'message two'})
 
             const patchedEl = patchComponent(pool, dom, vdom)
-            expect(patchedEl.outerHTML).to.eql(`
+            compareHTML(patchedEl.outerHTML, `
                 <div>
                     <p>message one</p>
                     <p>message two</p>
                 </div>
-            `.split('\n').map(v => v.trim()).join(''))
+            `)
         })
 
         it('successfully patches with updated props', () => {
             const {pool, dom, vdom} = setup()
+
             vdom.props = () => ({foo: 'message one', bar: 'message two'})
             const patchedEl = patchComponent(pool, dom, vdom)
+
             vdom.props = () => ({foo: 'message three', bar: 'message four'})
             const patchedAgainEl = patchComponent(pool, patchedEl, vdom)
-            expect(patchedAgainEl.outerHTML).to.eql(`
+
+            compareHTML(patchedAgainEl.outerHTML, `
                 <div>
                     <p>message three</p>
                     <p>message four</p>
                 </div>
-            `.split('\n').map(v => v.trim()).join(''))
+            `)
         })
     })
 })
@@ -277,16 +262,6 @@ function getVdom (html) {
     }
 }
 
-function expectHTML (el, html) {
-    const normalize = str => str
-    .split('\n')
-    .filter(v => !!v)
-    .map(v => v.trim())
-    .join('')
-
-    expect(normalize(el.outerHTML)).to.eql(normalize(html))
-}
-
 function setupComponents (components) {
     const before = document.body.innerHTML
     const componentNames = Object.keys(components)
@@ -316,8 +291,7 @@ describe('patch', () => {
             const el = document.querySelector('div')
             const patchedEl = patch(null, null, el, vdom)
 
-            expect(patchedEl).to.eql(el)
-            expectHTML(patchedEl, html)
+            compareHTML(patchedEl.outerHTML, html)
         })
 
         it('successfully patches a non matching root el', () => {
@@ -325,8 +299,7 @@ describe('patch', () => {
             const el = document.querySelector('p')
             const patchedEl = patch(null, null, el, vdom)
 
-            expect(patchedEl).to.not.eql(el)
-            expectHTML(patchedEl, html)
+            compareHTML(patchedEl.outerHTML, html)
         })
     })
 
@@ -369,7 +342,7 @@ describe('patch', () => {
             document.body.innerHTML = '<div></div>'
             const el = document.querySelector('div')
             const patchedEl = patch(null, pool, el, vdom)
-            expectHTML(patchedEl, `
+            compareHTML(patchedEl.outerHTML, `
                 <div id="my-app">
                     <h1>Hello world</h1>
                     <section>
@@ -382,7 +355,8 @@ describe('patch', () => {
         })
     })
 
-    describe('successfully patches static vdom tree with nested components', () => {
+    describe('successfully patches static vdom tree with nested components',
+    () => {
         const html = `
             <div id="my-app">
                 <h1>Hello world</h1>
@@ -419,7 +393,7 @@ describe('patch', () => {
             const el = document.querySelector('div')
             // console.log(vdom);
             const patchedEl = patch(null, pool, el, vdom)
-            expectHTML(patchedEl, `
+            compareHTML(patchedEl.outerHTML, `
                 <div id="my-app">
                     <h1>Hello world</h1>
                     <div>
