@@ -449,10 +449,10 @@ describe('patch', () => {
             })
         })
 
-        describe('static components', () => {
+        describe('components with props', () => {
             const html = `
                 <template id="foo">
-                    <p> {{msg}} </p>
+                    <p> {{ msg.text }} </p>
                 </template>
 
                 <div id="my-app">
@@ -468,9 +468,14 @@ describe('patch', () => {
                 return {vdom, pool, el}
             }
 
-            it('patches multiple children', () => {
+            it.only('patches multiple children', () => {
                 const {vdom, pool, el} = setup()
-                const messages = [ 'one', 'two', 'three' ]
+                const messages = [
+                    {id: 1, text: 'one'},
+                    {id: 2, text: 'two'},
+                    {id: 3, text: 'three'},
+                ]
+                // console.log(serialize(vdom))
                 const patchedEl = _patch(pool, el, vdom, {messages})
                 compareHTML(patchedEl.outerHTML, `
                     <div id="my-app">
