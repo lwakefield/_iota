@@ -468,7 +468,7 @@ describe('patch', () => {
                 return {vdom, pool, el}
             }
 
-            it.only('patches multiple children', () => {
+            it('patches multiple children', () => {
                 const {vdom, pool, el} = setup()
                 const messages = [
                     {id: 1, text: 'one'},
