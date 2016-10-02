@@ -247,31 +247,6 @@ describe('cleanChildren', () => {
     })
 })
 
-/**
- * Hackily get the vdom by setting innerHTML then resetting it once we are
- * done.
- */
-function getVdom (html) {
-    const before = document.body.innerHTML
-    document.body.innerHTML = html
-    const [vdom, pool] = parse(document.body)
-    document.body.innerHTML = before
-    return {
-        vdom: vdom.children[0],
-        pool,
-    }
-}
-
-function setupComponents (components) {
-    const before = document.body.innerHTML
-    const componentNames = Object.keys(components)
-    componentNames.forEach(v => {
-        document.body.innerHTML = components[v]
-        registerComponent(v, {el: `#${v}`})
-    })
-    document.body.innerHTML = before
-}
-
 describe('patch', () => {
     describe('static vdom tree with no components', () => {
         const html = `
@@ -284,27 +259,41 @@ describe('patch', () => {
                 </ul>
             </div>
         `
-        const {vdom} = getVdom(html)
+        const expected = html
+
+        function setup () {
+            document.body.innerHTML = html
+            const el = document.querySelector('#my-app')
+            const [vdom] = parse(el)
+            return {vdom}
+        }
 
         it('successfully patches a matching root el', () => {
-            document.body.innerHTML = '<div></div>'
-            const el = document.querySelector('div')
+            const {vdom} = setup()
+            const el = document.createElement('div')
             const patchedEl = patch(null, null, el, vdom)
 
-            compareHTML(patchedEl.outerHTML, html)
+            compareHTML(patchedEl.outerHTML, expected)
         })
 
         it('successfully patches a non matching root el', () => {
-            document.body.innerHTML = '<p></p>'
-            const el = document.querySelector('p')
+            const {vdom} = setup()
+            const el = document.createElement('p')
             const patchedEl = patch(null, null, el, vdom)
 
-            compareHTML(patchedEl.outerHTML, html)
+            compareHTML(patchedEl.outerHTML, expected)
         })
     })
 
     describe('successfully patches static vdom tree with components', () => {
         const html = `
+            <template id="bar">
+                <p>Hello world from bar</p>
+            </template>
+            <template id="foo">
+                <p>Hello world from foo</p>
+            </template>
+
             <div id="my-app">
                 <h1>Hello world</h1>
                 <section>
@@ -314,94 +303,88 @@ describe('patch', () => {
                 </section>
             </div>
         `
-        const components = {
-            bar: `
-            <template id="bar">
-                <p>Hello world from bar</p>
-            </template>`,
-
-            foo: `
-            <template id="foo">
+        const expected = `
+        <div id="my-app">
+            <h1>Hello world</h1>
+            <section>
                 <p>Hello world from foo</p>
-            </template>`,
-        }
-
+                <hr>
+                <p>Hello world from bar</p>
+            </section>
+        </div>
+        `
         function setup () {
-            setupComponents(components)
-            const before = document.body.innerHTML
             document.body.innerHTML = html
-            const el = document.querySelector('div')
+            registerComponent('bar', {el: '#bar'})
+            registerComponent('foo', {el: '#foo'})
+
+            const el = document.querySelector('#my-app')
             const [vdom, pool] = parse(el)
-            document.body.innerHTML = before
-            return {vdom, pool}
+            return {vdom, pool, el}
         }
 
-        it('successfully patches', () => {
+        it('successfully patches onto the initial node', () => {
+            const {vdom, pool, el} = setup()
+            const patchedEl = patch(null, pool, el, vdom)
+            compareHTML(patchedEl.outerHTML, expected)
+        })
+
+        it('successfully patches onto an empty node', () => {
             const {vdom, pool} = setup()
 
-            document.body.innerHTML = '<div></div>'
-            const el = document.querySelector('div')
+            const el = document.createElement('div')
             const patchedEl = patch(null, pool, el, vdom)
-            compareHTML(patchedEl.outerHTML, `
-                <div id="my-app">
-                    <h1>Hello world</h1>
-                    <section>
-                        <p>Hello world from foo</p>
-                        <hr>
-                        <p>Hello world from bar</p>
-                    </section>
-                </div>
-            `)
+            compareHTML(patchedEl.outerHTML, expected)
         })
     })
 
     describe('successfully patches static vdom tree with nested components',
     () => {
         const html = `
+            <template id="bar">
+                <p>Hello world from bar</p>
+            </template>
+            <template id="foo">
+                <p>Foo with a nested Bar</p>
+                <bar></bar>
+            </template>
+
             <div id="my-app">
                 <h1>Hello world</h1>
                 <foo></foo>
             </div>
         `
-        const components = {
-            bar: `
-            <template id="bar">
-                <p>Hello world from bar</p>
-            </template>`,
-
-            foo: `
-            <template id="foo">
+        const expected = `
+        <div id="my-app">
+            <h1>Hello world</h1>
+            <div>
                 <p>Foo with a nested Bar</p>
-                <bar></bar>
-            </template>`,
-        }
-
+                <p>Hello world from bar</p>
+            </div>
+        </div>
+        `
         function setup () {
-            setupComponents(components)
-            const before = document.body.innerHTML
             document.body.innerHTML = html
-            const el = document.querySelector('div')
+            registerComponent('bar', {el: '#bar'})
+            registerComponent('foo', {el: '#foo'})
+
+            const el = document.querySelector('#my-app')
             const [vdom, pool] = parse(el)
-            document.body.innerHTML = before
-            return {vdom, pool}
+            return {vdom, pool, el}
         }
 
-        it('successfully patches', () => {
+        it('successfully patches onto the initial node', () => {
+            const {vdom, pool, el} = setup()
+            const patchedEl = patch(null, pool, el, vdom)
+            compareHTML(patchedEl.outerHTML, expected)
+        })
+
+        it('successfully patches onto an empty node', () => {
             const {vdom, pool} = setup()
 
-            document.body.innerHTML = '<div></div>'
-            const el = document.querySelector('div')
-            // console.log(vdom);
+            const el = document.createElement('div')
             const patchedEl = patch(null, pool, el, vdom)
-            compareHTML(patchedEl.outerHTML, `
-                <div id="my-app">
-                    <h1>Hello world</h1>
-                    <div>
-                        <p>Foo with a nested Bar</p>
-                        <p>Hello world from bar</p>
-                    </div>
-                </div>
-            `)
+            compareHTML(patchedEl.outerHTML, expected)
         })
     })
 })
