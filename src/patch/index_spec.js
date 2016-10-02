@@ -12,10 +12,9 @@ import {
     ComponentPool,
     registerComponent,
 } from 'components'
-import {
-    ComponentGroup
-} from 'vdom/util'
+import { ComponentGroup } from 'vdom/util'
 import parse from 'parse'
+import serialize from 'serialize'
 
 global['Text'] = window.Text
 
@@ -83,7 +82,7 @@ describe('patchComponent', () => {
                     <p>{{ foo }}</p>
                     <p>{{ bar }}</p>
                 </template>
-                <foo :foo="" :bar=""></foo>
+                <foo :foo="f" :bar="b"></foo>
             `
             registerComponent('foo', {
                 el: '#foo',
@@ -152,7 +151,7 @@ describe('patchNode', () => {
         expect(patchedEl).to.not.eql(el)
         expect(patchedEl.tagName).to.eql('P')
     })
-    it('does replaces a node when not needed', () => {
+    it('does not replaces a node when not needed', () => {
         const el = document.createElement('div')
         const patchedEl = patchNode(el, {tagName: 'div'})
         expect(patchedEl).to.eql(el)
@@ -387,4 +386,101 @@ describe('patch', () => {
             compareHTML(patchedEl.outerHTML, expected)
         })
     })
+
+    describe('patches i-for children', () => {
+        // Passing unknown named variables into a function is tricky. See
+        // scope.js for more information, but this is the short version of how
+        // we do it, `with` magic.
+        const _patch = (pool, el, vdom, scope) => {
+            // eslint-disable-next-line
+            return new Function('scope', `
+                with (scope) {
+                    return patch(this, pool, el, ${serialize(vdom)})
+                }
+            `).call(null, Object.assign(scope, {patch, pool, el, vdom}))
+        }
+
+        describe('static non components', () => {
+            const html = `
+                <div id="my-app">
+                    <p i-for="m of messages">{{ m }}</p>
+                </div>
+            `
+
+            function setup () {
+                document.body.innerHTML = html
+                const el = document.querySelector('#my-app')
+                const [vdom, pool] = parse(el)
+                return {vdom, pool, el}
+            }
+
+            it('patches no children', () => {
+                const {vdom, pool, el} = setup()
+                const messages = []
+                const patchedEl = _patch(pool, el, vdom, {messages})
+
+                compareHTML(patchedEl.outerHTML, '<div id="my-app"></div>')
+            })
+
+            it('patches one child', () => {
+                const {vdom, pool, el} = setup()
+                const messages = ['one']
+                const patchedEl = _patch(pool, el, vdom, {messages})
+
+                compareHTML(patchedEl.outerHTML, `
+                <div id="my-app">
+                    <p>one</p>
+                </div>
+                `)
+            })
+
+            it('patches multiple children', () => {
+                const {vdom, pool, el} = setup()
+                const messages = [ 'one', 'two', 'three' ]
+                const patchedEl = _patch(pool, el, vdom, {messages})
+
+                compareHTML(patchedEl.outerHTML, `
+                <div id="my-app">
+                    <p>one</p>
+                    <p>two</p>
+                    <p>three</p>
+                </div>
+            `)
+            })
+        })
+
+        describe('static components', () => {
+            const html = `
+                <template id="foo">
+                    <p> {{msg}} </p>
+                </template>
+
+                <div id="my-app">
+                    <foo i-for="m of messages" :msg="m"></foo>
+                </div>
+            `
+
+            function setup () {
+                document.body.innerHTML = html
+                registerComponent('foo', {el: '#foo', props: ['msg']})
+                const el = document.querySelector('#my-app')
+                const [vdom, pool] = parse(el)
+                return {vdom, pool, el}
+            }
+
+            it('patches multiple children', () => {
+                const {vdom, pool, el} = setup()
+                const messages = [ 'one', 'two', 'three' ]
+                const patchedEl = _patch(pool, el, vdom, {messages})
+                compareHTML(patchedEl.outerHTML, `
+                    <div id="my-app">
+                        <p>one</p>
+                        <p>two</p>
+                        <p>three</p>
+                    </div>
+                `)
+            })
+        })
+    })
 })
+
