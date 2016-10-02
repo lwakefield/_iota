@@ -133,7 +133,9 @@ export function collectComponentGroups (children) {
     for (let i = 0; i < len; i++) {
         let child = children[i]
 
-        if (currGroup.shouldHold(child)) {
+        if (child === undefined) {
+            continue
+        } else if (currGroup.shouldHold(child)) {
             currGroup.push(child)
         } else {
             result.push(currGroup)
