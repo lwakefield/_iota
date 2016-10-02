@@ -28,7 +28,7 @@ export function collectProps (el) {
         if (!attr.name.match('^:.+')) return;
 
         let name = attr.name.replace(/^:/, '');
-        if (template.props && template.props.includes(name)) {
+        if (template.options.props && template.options.props.includes(name)) {
             el.removeAttribute(attr.name);
             props.push([name, attr.value]);
         }
